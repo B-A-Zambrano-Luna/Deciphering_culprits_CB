@@ -258,7 +258,7 @@ fig, axs = plt.subplots(1, 1, figsize=(11 / 2.54, 11 / 2.54))
 tB = np.array(
     [day - day_start for day in data_fit[label]])
 
-y_values = model_CyB.Zm(model_CyB.t)
+y_values = np.array([model_CyB.Zm(t) for t in model_CyB.t])
 
 axs.plot(model_CyB.t, y_values, color=(19/255, 103/255, 131/255))
 

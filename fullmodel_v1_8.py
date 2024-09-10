@@ -289,6 +289,10 @@ class modelCyB(object):
 
     def Zm(self, t):
         return self.interpZm(t)
+        # if self.interpZm(t) < 3:
+        #     return 3
+        # else:
+        #     return self.interpZm(t)
 
     def Temp(self, t, data=None):
         # print('Temp:', self.interpTemp(t), t)
