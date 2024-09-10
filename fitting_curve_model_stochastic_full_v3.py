@@ -52,10 +52,12 @@ labels = ['MICROCYSTIN, TOTAL',
           'OXYGEN DISSOLVED (FIELD METER)',
           'Total cyanobacterial cell count (cells/mL)']
 
+labels = ['Total cyanobacterial cell count (cells/mL)']
+
 
 years = ['2018', '2019', '2020', '2021', '2022', '2023']
 years = ['2021']
-coment = "_v6_"
+coment = "_v6_" + labels[-1][:13]
 
 data_fit = extractData(data, years, labels, lake_name)
 
@@ -225,17 +227,26 @@ def sumOfSquaredError(parameterTuple, *args):
         return ans1 / samples if samples != 0 else np.nan
 
     # Microcystin Error
-    errorM = localerror('MICROCYSTIN, TOTAL', M_values)
-    # errorM = np.nan
+    if 'MICROCYSTIN, TOTAL' in labels:
+        errorM = localerror('MICROCYSTIN, TOTAL', M_values)
+    else:
+        errorM = np.nan
     # Cyanobacteria Error
-    errorB = localerror('Total cyanobacterial cell count (cells/mL)', B_values)
-
+    if 'Total cyanobacterial cell count (cells/mL)' in labels:
+        errorB = localerror(
+            'Total cyanobacterial cell count (cells/mL)', B_values)
+    else:
+        errorB = np.nan
     # Phosphorus Error
-    errorP = localerror('PHOSPHORUS TOTAL DISSOLVED', P_values)
-    # errorP = np.nan
+    if 'PHOSPHORUS TOTAL DISSOLVED' in labels:
+        errorP = localerror('PHOSPHORUS TOTAL DISSOLVED', P_values)
+    else:
+        errorP = np.nan
     # Oxygen Error
-    errorO = localerror('OXYGEN DISSOLVED (FIELD METER)', O_values)
-    # errorO = np.nan
+    if 'OXYGEN DISSOLVED (FIELD METER)' in labels:
+        errorO = localerror('OXYGEN DISSOLVED (FIELD METER)', O_values)
+    else:
+        errorO = np.nan
 
     Erros = np.array([errorM, errorB, errorP, errorO])
 
