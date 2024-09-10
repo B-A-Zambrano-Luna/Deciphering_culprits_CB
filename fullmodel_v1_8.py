@@ -24,9 +24,9 @@ def generate_dates(year):
 # Parameters
 params = {
     'I_in': 300,
-    'z_mk_A': (7*0.0004)*1000,
-    'z_mk_B': (7*0.0004)*1000,
-    'z_mK_bg': (7*0.3),
+    'z_mk_A': (1*0.0004)*1000,
+    'z_mk_B': (1*0.0004)*1000,
+    'z_mK_bg': (1*0.3),
     'H_B': 120,
     'H_A': 120,
     'z_m': 2,
@@ -139,19 +139,19 @@ def eta_B(T, params):
 
 
 def h_A(A, B, params):
-    return (1 / (params['z_mk_A'] * A + params['z_mk_B'] * B + params['z_mK_bg'])) * \
+    return (1 / (params['z_m'] * params['z_mk_A'] * A + params['z_m'] * params['z_mk_B'] * B + params['z_m'] * params['z_mK_bg'])) * \
         np.log((params['H_A'] + params['I_in']) /
                (params['H_A'] + I(A, B, params)))
 
 
 def h_B(A, B, params):
-    return (1 / (params['z_mk_A'] * A + params['z_mk_B'] * B + params['z_mK_bg'])) * \
+    return (1 / (params['z_m'] * params['z_mk_A'] * A + params['z_m'] * params['z_mk_B'] * B + params['z_m'] * params['z_mK_bg'])) * \
         np.log((params['H_B'] + params['I_in']) /
                (params['H_B'] + I(A, B, params)))
 
 
 def I(B, A, params):
-    return params['I_in'] * np.exp(-(params['z_mk_A'] * A + params['z_mk_B'] * B + params['z_mK_bg']))
+    return params['I_in'] * np.exp(-(params['z_m'] * params['z_mk_A'] * A + params['z_m'] * params['z_mk_B'] * B + params['z_m'] * params['z_mK_bg']))
 
 
 def rho_A(Q_A, P, params):
@@ -283,14 +283,19 @@ class modelCyB(object):
         #     fill_value='extrapolate',
         #     kind='next')
 
-        # def Temp(x): return 20
-        # self.interpTemp = Temp
+    def get_interpZm(self, Zmsample, days):
+        self.interpZm = Akima1DInterpolator(
+            days, Zmsample)
+
+    def Zm(self, t):
+        return self.interpZm(t)
 
     def Temp(self, t, data=None):
         # print('Temp:', self.interpTemp(t), t)
         return self.interpTemp(t)
 
     def system(self, y, t):
+        self.params['z_m'] = self.Zm(t)
         params = self.params
         M, B, A, Q_B, \
             Q_A, P, D, Y, \
@@ -309,7 +314,7 @@ class modelCyB(object):
                 * h_B(A, B, params)
                 * eta_B(self.Temp(t), params)) * B - \
             params['mu_r_B'] * B - \
-            (params["d_E"] / params['z_m']) * B\
+            (params["d_E"] / self.Zm(t)) * B\
             - f_B(B, A, params)*D\
             - N_B(self.Temp(t), params)*B*0.01
 
@@ -318,7 +323,7 @@ class modelCyB(object):
                 * h_A(A, B, params)
                 * eta_A(self.Temp(t), params)) * A - \
             params['mu_r_A'] * A - \
-            ((params['v'] + params["d_E"]) / params['z_m']) * A \
+            ((params['v'] + params["d_E"]) / self.Zm(t)) * A \
             - (params["x_A"]*v_A)*A \
             - f_A(B, A, params)*D\
             - N_A(self.Temp(t), params)*A*0.01
@@ -348,7 +353,7 @@ class modelCyB(object):
         dQ_Adt = rho_A(Q_B, P, params) - \
             params['mu_A'] * (Q_A - params['Q_m_A']) * h_A(B, A, params)
 
-        dPdt = (params["d_E"] / params['z_m']) * (params['p_in'] - P) - \
+        dPdt = (params["d_E"] / self.Zm(t)) * (params['p_in'] - P) - \
             rho_A(Q_A, P, params) * A - \
             rho_B(Q_B, P, params) * B
 

@@ -55,7 +55,7 @@ labels = ['MICROCYSTIN, TOTAL',
 
 years = ['2018', '2019', '2020', '2021', '2022', '2023']
 years = ['2021']
-coment = "_v5_"
+coment = "_v6_"
 
 data_fit = extractData(data, years, labels, lake_name)
 
@@ -91,17 +91,19 @@ model_CyB.params['Ext_W'] = 0.025
 
 # Get Temperature Function
 path = './ERA5-Land/' + years[-1]
-TempData = pd.read_csv(path+lake_name + 'WaterTemperature.csv')
-TempData['Date'] = pd.to_datetime(
-    TempData['Date'], format='mixed')
+TempZmData = pd.read_csv(path+lake_name + 'WaterTemperature.csv')
+TempZmData['Date'] = pd.to_datetime(
+    TempZmData['Date'], format='mixed')
 
-tempSamp = TempData['lake_mix_layer_temperature']
-
-days = TempData['Date'].dt.day_of_year
+tempSamp = TempZmData['lake_mix_layer_temperature']
+Zmsample = (TempZmData['lake_mix_layer_depth_min'] +
+            TempZmData['lake_mix_layer_depth_max'])*0.5
+days = TempZmData['Date'].dt.day_of_year
 
 days = np.array(days) - day_start
 
 model_CyB.get_interpTemp(tempSamp, days)
+model_CyB.get_interpZm(Zmsample, days)
 
 # New time
 
@@ -113,7 +115,7 @@ unknow_params = ["e_BD", "alpha_B", "alpha_D",
                  "tau_B", "tau_D", "tau_Y",
                  "a_A", "a_D", "sigma_A",
                  "sigma_D", "x_A", "x_D",
-                 "n_D", 'p_in']
+                 "n_D", 'p_in', "NormM"]
 
 
 def model(parameterTuple):
@@ -162,6 +164,7 @@ minimum_params["x_A"] = 0.001
 minimum_params["x_D"] = 0.001
 minimum_params["n_D"] = 0.001
 minimum_params['p_in'] = 0.001
+minimum_params["NormM"] = 0.01
 
 # Maximums
 maximum_params = {}
@@ -180,6 +183,7 @@ maximum_params["x_A"] = 0.01
 maximum_params["x_D"] = 0.01
 maximum_params["n_D"] = 0.15
 maximum_params['p_in'] = 0.3
+maximum_params["NormM"] = 1
 
 param_bounds = [(0, 0.1),  # B(0)
                 (0, 0.1),  # A(0)

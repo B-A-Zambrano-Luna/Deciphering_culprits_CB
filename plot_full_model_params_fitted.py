@@ -110,19 +110,21 @@ def read_params():
 
     model_CyB.set_linetime()
 
-    # Temperature
+    # Temperature and Zm
     path = './ERA5-Land/' + years[-1]
-    TempData = pd.read_csv(path+lake_name + 'WaterTemperature.csv')
-    TempData['Date'] = pd.to_datetime(
-        TempData['Date'], format='mixed')
+    TempZmData = pd.read_csv(path+lake_name + 'WaterTemperature.csv')
+    TempZmData['Date'] = pd.to_datetime(
+        TempZmData['Date'], format='mixed')
 
-    tempSamp = TempData['lake_mix_layer_temperature']
-
-    days = TempData['Date'].dt.day_of_year
+    tempSamp = TempZmData['lake_mix_layer_temperature']
+    Zmsample = (TempZmData['lake_mix_layer_depth_min'] +
+                TempZmData['lake_mix_layer_depth_max'])*0.5
+    days = TempZmData['Date'].dt.day_of_year
 
     days = np.array(days) - day_start
 
     model_CyB.get_interpTemp(tempSamp, days)
+    model_CyB.get_interpZm(Zmsample, days)
     return model_CyB
 
 
@@ -247,6 +249,53 @@ for label in labels:
 
     # plt.legend()
     plt.tight_layout()
+
+# Other variables
+sns.set_style('ticks')
+sns.plotting_context("paper", font_scale=1.5)  # Adjust font size as needed
+fig, axs = plt.subplots(1, 1, figsize=(11 / 2.54, 11 / 2.54))
+# axs = axs.ravel()
+tB = np.array(
+    [day - day_start for day in data_fit[label]])
+
+y_values = model_CyB.Zm(model_CyB.t)
+
+axs.plot(model_CyB.t, y_values, color=(19/255, 103/255, 131/255))
+
+# plt.xlabel("Time (days)")
+plt.xlabel("")
+plt.ylabel("Zm $[m]")
+plt.title('')
+y_formatter = ScalarFormatter(useMathText=True, useOffset=False)
+y_formatter.set_powerlimits((-3, 4))
+y_formatter.orderOfMagnitude = 4
+axs.yaxis.set_major_formatter(y_formatter)
+
+for spine in axs.spines.values():
+    spine.set_color('black')
+axs.tick_params(axis='both', which='both', bottom=True, top=True,
+                left=True, right=True, direction='in', length=4, width=1, colors='black')
+
+# axs.set_ylim(B_values.min()-0.001, B_values.max()*(1+0.05))
+# axs.set_xlim(model_CyB.t.min(), model_CyB.t.max())
+
+# Dates as x axis
+dates = generate_dates(2023)
+x_ticks = axs.xaxis.get_ticklocs()
+
+if len(dates) > len(x_ticks):
+    x_stape = round(len(dates) / len(x_ticks), 0)
+    x_labels = [dates[int(x_val)] for x_val in x_ticks[:-1]]
+    axs.xaxis.set_ticklabels(x_labels,
+                             rotation=30)
+else:
+    x_labels = dates
+    axs.xaxis.set_ticklabels(x_labels,
+                             rotation=30)
+
+# plt.legend()
+plt.tight_layout()
+
 
 # Save plots
 # path = './New data/Images/Year v_1/'
