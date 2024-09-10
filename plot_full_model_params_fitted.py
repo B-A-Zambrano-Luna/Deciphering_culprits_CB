@@ -92,6 +92,7 @@ def read_params():
     model_CyB.params['r_W'] = 1
     model_CyB.params['Ext_Y'] = 0.025*13
     model_CyB.params['Ext_W'] = 0.025
+    # model_CyB.params['p_in'] = 0.009601
 
     # With Toxine
     model_CyB.toxines = True and (model_CyB.initial[1] > 0)
@@ -197,7 +198,7 @@ for label in labels:
 
     if label == 'MICROCYSTIN, TOTAL':
         ylabel = "M $[\mu g/L]$ "
-        y_values = M_values
+        y_values = M_values*0.01
     elif label == 'PHOSPHORUS TOTAL DISSOLVED':
         ylabel = "P $[mg P/L]$ "
         y_values = P_values
