@@ -39,6 +39,9 @@ class WaterTemperature(object):
         self.sat = 'ECMWF/ERA5_LAND/DAILY_AGGR'
         self.reducer = ee.Reducer.mean()
         self.scale = 1113  # meters
+        self.labels = ['lake_mix_layer_temperature',
+                       'lake_mix_layer_depth_min',
+                       'lake_mix_layer_depth_max']
 
     def setROI(self, radio):
         """
@@ -77,7 +80,7 @@ class WaterTemperature(object):
         image = ee.ImageCollection(self.sat)\
             .filterBounds(self.roi)\
             .filterDate(gDate, gDate.advance(1, 'day'))\
-            .select(['lake_mix_layer_temperature'])
+            .select(self.labels)
         imageReduce = image.first().reduceRegion(
             reducer=self.reducer,
             geometry=self.roi,
@@ -102,13 +105,19 @@ class WaterTemperature(object):
         pandas.DataFrame
         """
         Dates = generate_dates(start_date, end_date)
-        data = {'lake_mix_layer_temperature': [],
-                'Date': []}
+        data = {'Date': []}
+        for label in self.labels:
+            data[label] = []
         for date in Dates:
             print("Processing...", date)
             Tempdata = self.getTempTime(date)
-            data['lake_mix_layer_temperature'].append(
-                Tempdata['lake_mix_layer_temperature']-273.15)
+            for label in self.labels:
+                if label == 'lake_mix_layer_temperature':
+                    data[label].append(
+                        Tempdata[label]-273.15)
+                else:
+                    data[label].append(
+                        Tempdata[label])
             data['Date'].append(date)
         return pd.DataFrame(data)
 
