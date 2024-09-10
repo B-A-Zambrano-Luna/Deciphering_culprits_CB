@@ -50,19 +50,17 @@ lake_name = "PIGEON LAKE"
 labels = ['MICROCYSTIN, TOTAL',
           'PHOSPHORUS TOTAL DISSOLVED',
           'OXYGEN DISSOLVED (FIELD METER)',
-          'Total cyanobacterial cell count (cells/mL)',
-          'TEMPERATURE WATER']
-# labels = ['Total cyanobacterial cell count (cells/mL)',
-#           'TEMPERATURE WATER']
+          'Total cyanobacterial cell count (cells/mL)']
+
+
 years = ['2018', '2019', '2020', '2021', '2022', '2023']
 years = ['2021']
-coment = "_v4_"
+coment = "_v5_"
 
 data_fit = extractData(data, years, labels, lake_name)
 
 data = None
 
-# # t_data = data_fit["days"].values
 
 # New time scale
 day_start = pd.to_datetime("2023-05-01").day_of_year
@@ -92,14 +90,17 @@ model_CyB.params['Ext_W'] = 0.025
 
 
 # Get Temperature Function
+path = './ERA5-Land/' + years[-1]
+TempData = pd.read_csv(path+lake_name + 'WaterTemperature.csv')
+TempData['Date'] = pd.to_datetime(
+    TempData['Date'], format='mixed')
 
-dataTemp = data_fit['TEMPERATURE WATER']
+tempSamp = TempData['lake_mix_layer_temperature']
 
-days = list(dataTemp.keys())
-days.sort()
-tempSamp = [dataTemp[day][(dataTemp[day] > -999)].mean() for day in days]
+days = TempData['Date'].dt.day_of_year
 
 days = np.array(days) - day_start
+
 model_CyB.get_interpTemp(tempSamp, days)
 
 # New time
@@ -112,7 +113,7 @@ unknow_params = ["e_BD", "alpha_B", "alpha_D",
                  "tau_B", "tau_D", "tau_Y",
                  "a_A", "a_D", "sigma_A",
                  "sigma_D", "x_A", "x_D",
-                 "n_D"]
+                 "n_D", 'p_in']
 
 
 def model(parameterTuple):
@@ -160,6 +161,7 @@ minimum_params["sigma_D"] = 0.001
 minimum_params["x_A"] = 0.001
 minimum_params["x_D"] = 0.001
 minimum_params["n_D"] = 0.001
+minimum_params['p_in'] = 0.001
 
 # Maximums
 maximum_params = {}
@@ -177,6 +179,7 @@ maximum_params["sigma_D"] = 0.01
 maximum_params["x_A"] = 0.01
 maximum_params["x_D"] = 0.01
 maximum_params["n_D"] = 0.15
+maximum_params['p_in'] = 0.3
 
 param_bounds = [(0, 0.1),  # B(0)
                 (0, 0.1),  # A(0)
@@ -252,7 +255,7 @@ def sumOfSquaredError(parameterTuple, *args):
                           index=[lake_name],
                           columns=["B_0", "A_0", "D_0"] + unknow_params + ["MSE", "MSEM", "MSEB", "MSEP", "MSEO"])
 
-        df.to_csv(name_data_param + lake_name + coment + "_callback.csv")
+        df.to_csv(name_data_param + lake_name + coment + "_backup.csv")
         print("Current Solution:", current_solution)
         print("Best Solution:", best_solution)
         print("Best Error:", best_error)

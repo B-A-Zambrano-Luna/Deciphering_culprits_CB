@@ -52,7 +52,7 @@ labels = ['MICROCYSTIN, TOTAL',
 #           'TEMPERATURE WATER']
 # years = ['2018', '2019', '2020', '2021', '2022', '2023']
 years = ['2021']
-coment = "_v3_"
+coment = "_v5_"
 
 data_fit = extractData(data, years, labels, lake_name)
 
@@ -63,9 +63,8 @@ def read_params():
     model_CyB = fullmodel_v1_8.modelCyB()
     model_CyB.initial = initial_conditions
     name_data_param = "fitting_parameters_full_variables_v1"
-    coment = "_v1_7_"
     name_data = './FittedParameters/' + \
-        'fitting_parameters_full_variables_v2PIGEON LAKE_v3__final' + ".csv"
+        'fitting_parameters_full_variables_v2PIGEON LAKE'+coment + '_final' + ".csv"
 
     params_fit = pd.read_csv(name_data)
 
@@ -75,7 +74,7 @@ def read_params():
                      "alpha_Y",
                      "tau_B", "tau_D", "tau_Y",
                      "a_A", "a_D", "sigma_A",
-                     "sigma_D", "x_A", "x_D"]
+                     "sigma_D", "x_A", "x_D", 'p_in']
 
     model_CyB.initial[1] = params_fit["B_0"][0]
     model_CyB.initial[2] = params_fit["A_0"][0]
@@ -111,13 +110,18 @@ def read_params():
     model_CyB.set_linetime()
 
     # Temperature
-    dataTemp = data_fit['TEMPERATURE WATER']
-    days = list(dataTemp.keys())
-    days.sort()
-    days = np.array(days)
-    tempSamp = [dataTemp[day][(dataTemp[day] > -999)].mean() for day in days]
+    path = './ERA5-Land/' + years[-1]
+    TempData = pd.read_csv(path+lake_name + 'WaterTemperature.csv')
+    TempData['Date'] = pd.to_datetime(
+        TempData['Date'], format='mixed')
 
-    model_CyB.get_interpTemp(tempSamp, days-day_start)
+    tempSamp = TempData['lake_mix_layer_temperature']
+
+    days = TempData['Date'].dt.day_of_year
+
+    days = np.array(days) - day_start
+
+    model_CyB.get_interpTemp(tempSamp, days)
     return model_CyB
 
 
@@ -193,7 +197,7 @@ for label in labels:
 
     if label == 'MICROCYSTIN, TOTAL':
         ylabel = "M $[\mu g/L]$ "
-        y_values = M_values*0.05
+        y_values = M_values
     elif label == 'PHOSPHORUS TOTAL DISSOLVED':
         ylabel = "P $[mg P/L]$ "
         y_values = P_values

@@ -274,21 +274,20 @@ class modelCyB(object):
         return self.Temp(self.t).max()
 
     def get_interpTemp(self, tempSamp, days):
-        # self.interpTemp = Akima1DInterpolator(
-        #     days, tempSamp, extrapolate=True)
+        self.interpTemp = Akima1DInterpolator(
+            days, tempSamp)
         # self.interpTemp = PchipInterpolator(days, tempSamp, extrapolate=True)
-        self.interpTemp = interp1d(
-            days, tempSamp,
-            fill_value='extrapolate',
-            kind='next')
+        # self.interpTemp = interp1d(
+        #     days, tempSamp,
+        #     fill_value='extrapolate',
+        #     kind='next')
 
         # def Temp(x): return 20
         # self.interpTemp = Temp
 
     def Temp(self, t, data=None):
         # print('Temp:', self.interpTemp(t), t)
-        # return self.interpTemp(t)
-        return self.max_temp*np.exp(-self.T*(t % self.t_f - self.max_temp_time)**2)+self.min_temp
+        return self.interpTemp(t)
 
     def system(self, y, t):
         params = self.params
