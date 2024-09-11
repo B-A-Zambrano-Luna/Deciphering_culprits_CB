@@ -45,7 +45,7 @@ model_CyB.toxines = True
 data = pd.read_csv(
     "merged_water_quality_data.csv", low_memory=False)
 
-lake_name = "PIGEON LAKE"
+lake_name = "CHESTERMERE LAKE"
 
 labels = ['MICROCYSTIN, TOTAL',
           'PHOSPHORUS TOTAL DISSOLVED',
@@ -57,7 +57,7 @@ labels = ['Total cyanobacterial cell count (cells/mL)']
 
 years = ['2018', '2019', '2020', '2021', '2022', '2023']
 years = ['2021']
-coment = "_v6_" + labels[-1][:13]
+coment = "_v3_" + labels[-1][:13]
 
 data_fit = extractData(data, years, labels, lake_name)
 
@@ -117,7 +117,7 @@ unknow_params = ["e_BD", "alpha_B", "alpha_D",
                  "tau_B", "tau_D", "tau_Y",
                  "a_A", "a_D", "sigma_A",
                  "sigma_D", "x_A", "x_D",
-                 "n_D", 'p_in', "NormM"]
+                 "n_D", 'p_in']
 
 
 def model(parameterTuple):
@@ -166,7 +166,7 @@ minimum_params["x_A"] = 0.001
 minimum_params["x_D"] = 0.001
 minimum_params["n_D"] = 0.001
 minimum_params['p_in'] = 0.001
-minimum_params["NormM"] = 0.01
+# minimum_params["NormM"] = 0.01
 
 # Maximums
 maximum_params = {}
@@ -185,7 +185,7 @@ maximum_params["x_A"] = 0.01
 maximum_params["x_D"] = 0.01
 maximum_params["n_D"] = 0.15
 maximum_params['p_in'] = 0.3
-maximum_params["NormM"] = 1
+# maximum_params["NormM"] = 1
 
 param_bounds = [(0, 0.1),  # B(0)
                 (0, 0.1),  # A(0)
@@ -291,22 +291,44 @@ best_solution = None
 best_error = 100
 
 
-result = differential_evolution(
-    sumOfSquaredError,
-    bounds=param_bounds,
-    disp=True,
-    seed=0,
-    strategy=strategies[0],
-    # x0=initial_guess,
-    maxiter=25,
-    updating="immediate",
-    # workers=6,
-    # callback=callback_1,
-    popsize=15,
-    polish=False,
-    tol=0.01)
+def getParameteres(updating="immediate", workers=-1):
+    if updating == "immediate":
+        result = differential_evolution(
+            sumOfSquaredError,
+            bounds=param_bounds,
+            disp=True,
+            seed=0,
+            strategy=strategies[0],
+            # x0=initial_guess,
+            maxiter=25,
+            updating=updating,
+            # workers=6,
+            # callback=callback_1,
+            popsize=15,
+            polish=False,
+            tol=0.01)
+    elif updating == "deferred":
+        result = differential_evolution(
+            sumOfSquaredError,
+            bounds=param_bounds,
+            disp=True,
+            seed=0,
+            strategy=strategies[0],
+            # x0=initial_guess,
+            maxiter=25,
+            updating=updating,
+            workers=workers,
+            # callback=callback_1,
+            popsize=15,
+            polish=False,
+            tol=0.01)
+    return result
 
 
+# if __name__ == '__main__':
+#     result = getParameteres(updating="deferred", workers=6)
+
+result = getParameteres(updating="immediate")
 df = pd.DataFrame(all_solutions_errors,
                   index=[lake_name] * len(all_solutions_errors),
                   columns=["B_0", "A_0", "D_0"] + unknow_params + ["MSE", "MSEM", "MSEB", "MSEP", "MSEO"])

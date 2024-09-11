@@ -17,7 +17,7 @@ A_0 = 0.05
 B_0 = 0.004  # 0.004
 Q_B_0 = 0.01
 Q_A_0 = 0.01
-P_0 = 0.0117  # 10
+P_0 = 0.006  # 10
 D_0 = 0.0239  # 0.0239
 Y_0 = 0.025
 W_0 = 0.0025
@@ -52,7 +52,7 @@ labels = ['MICROCYSTIN, TOTAL',
 #           'TEMPERATURE WATER']
 # years = ['2018', '2019', '2020', '2021', '2022', '2023']
 years = ['2021']
-coment = "_v5_"
+coment = "_v4_"
 
 data_fit = extractData(data, years, labels, lake_name)
 
@@ -74,7 +74,7 @@ def read_params():
                      "alpha_Y",
                      "tau_B", "tau_D", "tau_Y",
                      "a_A", "a_D", "sigma_A",
-                     "sigma_D", "x_A", "x_D", 'p_in']
+                     "sigma_D", "x_A", "x_D"]
 
     model_CyB.initial[1] = params_fit["B_0"][0]
     model_CyB.initial[2] = params_fit["A_0"][0]
@@ -92,7 +92,8 @@ def read_params():
     model_CyB.params['r_W'] = 1
     model_CyB.params['Ext_Y'] = 0.025*13
     model_CyB.params['Ext_W'] = 0.025
-    # model_CyB.params['p_in'] = 0.009601
+    model_CyB.params['p'] = 0.9
+    model_CyB.params['p_in'] = 0.03  # 0.09601  # 0.125  # (0.009601/2)*0
 
     # With Toxine
     model_CyB.toxines = True and (model_CyB.initial[1] > 0)
@@ -200,7 +201,7 @@ for label in labels:
 
     if label == 'MICROCYSTIN, TOTAL':
         ylabel = "M $[\mu g/L]$ "
-        y_values = M_values*0.01
+        y_values = M_values
     elif label == 'PHOSPHORUS TOTAL DISSOLVED':
         ylabel = "P $[mg P/L]$ "
         y_values = P_values
@@ -234,7 +235,7 @@ for label in labels:
     # axs.set_xlim(model_CyB.t.min(), model_CyB.t.max())
 
     # Dates as x axis
-    dates = generate_dates(2023)
+    dates = generate_dates(2021)
     x_ticks = axs.xaxis.get_ticklocs()
 
     if len(dates) > len(x_ticks):
@@ -250,7 +251,7 @@ for label in labels:
     # plt.legend()
     plt.tight_layout()
 
-# Other variables
+# Other variables Zm
 sns.set_style('ticks')
 sns.plotting_context("paper", font_scale=1.5)  # Adjust font size as needed
 fig, axs = plt.subplots(1, 1, figsize=(11 / 2.54, 11 / 2.54))
@@ -296,6 +297,195 @@ else:
 # plt.legend()
 plt.tight_layout()
 
+
+# Daphnia
+
+sns.set_style('ticks')
+sns.plotting_context("paper", font_scale=1.5)  # Adjust font size as needed
+fig, axs = plt.subplots(1, 1, figsize=(11 / 2.54, 11 / 2.54))
+# axs = axs.ravel()
+tB = np.array(
+    [day - day_start for day in data_fit[label]])
+
+y_values = D_values
+
+axs.plot(model_CyB.t, y_values, color=(19/255, 103/255, 131/255))
+
+# plt.xlabel("Time (days)")
+plt.xlabel("")
+plt.ylabel("Daphnia")
+plt.title('')
+y_formatter = ScalarFormatter(useMathText=True, useOffset=False)
+y_formatter.set_powerlimits((-3, 4))
+y_formatter.orderOfMagnitude = 4
+axs.yaxis.set_major_formatter(y_formatter)
+
+for spine in axs.spines.values():
+    spine.set_color('black')
+axs.tick_params(axis='both', which='both', bottom=True, top=True,
+                left=True, right=True, direction='in', length=4, width=1, colors='black')
+
+# axs.set_ylim(B_values.min()-0.001, B_values.max()*(1+0.05))
+# axs.set_xlim(model_CyB.t.min(), model_CyB.t.max())
+
+# Dates as x axis
+dates = generate_dates(2023)
+x_ticks = axs.xaxis.get_ticklocs()
+
+if len(dates) > len(x_ticks):
+    x_stape = round(len(dates) / len(x_ticks), 0)
+    x_labels = [dates[int(x_val)] for x_val in x_ticks[:-1]]
+    axs.xaxis.set_ticklabels(x_labels,
+                             rotation=30)
+else:
+    x_labels = dates
+    axs.xaxis.set_ticklabels(x_labels,
+                             rotation=30)
+
+# plt.legend()
+plt.tight_layout()
+
+# Algae
+
+sns.set_style('ticks')
+sns.plotting_context("paper", font_scale=1.5)  # Adjust font size as needed
+fig, axs = plt.subplots(1, 1, figsize=(11 / 2.54, 11 / 2.54))
+# axs = axs.ravel()
+tB = np.array(
+    [day - day_start for day in data_fit[label]])
+
+y_values = A_values
+
+axs.plot(model_CyB.t, y_values, color=(19/255, 103/255, 131/255))
+
+# plt.xlabel("Time (days)")
+plt.xlabel("")
+plt.ylabel("Algea")
+plt.title('')
+y_formatter = ScalarFormatter(useMathText=True, useOffset=False)
+y_formatter.set_powerlimits((-3, 4))
+y_formatter.orderOfMagnitude = 4
+axs.yaxis.set_major_formatter(y_formatter)
+
+for spine in axs.spines.values():
+    spine.set_color('black')
+axs.tick_params(axis='both', which='both', bottom=True, top=True,
+                left=True, right=True, direction='in', length=4, width=1, colors='black')
+
+# axs.set_ylim(B_values.min()-0.001, B_values.max()*(1+0.05))
+# axs.set_xlim(model_CyB.t.min(), model_CyB.t.max())
+
+# Dates as x axis
+dates = generate_dates(2023)
+x_ticks = axs.xaxis.get_ticklocs()
+
+if len(dates) > len(x_ticks):
+    x_stape = round(len(dates) / len(x_ticks), 0)
+    x_labels = [dates[int(x_val)] for x_val in x_ticks[:-1]]
+    axs.xaxis.set_ticklabels(x_labels,
+                             rotation=30)
+else:
+    x_labels = dates
+    axs.xaxis.set_ticklabels(x_labels,
+                             rotation=30)
+
+# plt.legend()
+plt.tight_layout()
+
+
+# Yellow Perch
+
+sns.set_style('ticks')
+sns.plotting_context("paper", font_scale=1.5)  # Adjust font size as needed
+fig, axs = plt.subplots(1, 1, figsize=(11 / 2.54, 11 / 2.54))
+# axs = axs.ravel()
+tB = np.array(
+    [day - day_start for day in data_fit[label]])
+
+y_values = Y_values
+
+axs.plot(model_CyB.t, y_values, color=(19/255, 103/255, 131/255))
+
+# plt.xlabel("Time (days)")
+plt.xlabel("")
+plt.ylabel("Yellow Perch")
+plt.title('')
+y_formatter = ScalarFormatter(useMathText=True, useOffset=False)
+y_formatter.set_powerlimits((-3, 4))
+y_formatter.orderOfMagnitude = 4
+axs.yaxis.set_major_formatter(y_formatter)
+
+for spine in axs.spines.values():
+    spine.set_color('black')
+axs.tick_params(axis='both', which='both', bottom=True, top=True,
+                left=True, right=True, direction='in', length=4, width=1, colors='black')
+
+# axs.set_ylim(B_values.min()-0.001, B_values.max()*(1+0.05))
+# axs.set_xlim(model_CyB.t.min(), model_CyB.t.max())
+
+# Dates as x axis
+dates = generate_dates(2023)
+x_ticks = axs.xaxis.get_ticklocs()
+
+if len(dates) > len(x_ticks):
+    x_stape = round(len(dates) / len(x_ticks), 0)
+    x_labels = [dates[int(x_val)] for x_val in x_ticks[:-1]]
+    axs.xaxis.set_ticklabels(x_labels,
+                             rotation=30)
+else:
+    x_labels = dates
+    axs.xaxis.set_ticklabels(x_labels,
+                             rotation=30)
+
+# plt.legend()
+plt.tight_layout()
+
+# Walleye
+
+sns.set_style('ticks')
+sns.plotting_context("paper", font_scale=1.5)  # Adjust font size as needed
+fig, axs = plt.subplots(1, 1, figsize=(11 / 2.54, 11 / 2.54))
+# axs = axs.ravel()
+tB = np.array(
+    [day - day_start for day in data_fit[label]])
+
+y_values = W_values
+
+axs.plot(model_CyB.t, y_values, color=(19/255, 103/255, 131/255))
+
+# plt.xlabel("Time (days)")
+plt.xlabel("")
+plt.ylabel("Walleye")
+plt.title('')
+y_formatter = ScalarFormatter(useMathText=True, useOffset=False)
+y_formatter.set_powerlimits((-3, 4))
+y_formatter.orderOfMagnitude = 4
+axs.yaxis.set_major_formatter(y_formatter)
+
+for spine in axs.spines.values():
+    spine.set_color('black')
+axs.tick_params(axis='both', which='both', bottom=True, top=True,
+                left=True, right=True, direction='in', length=4, width=1, colors='black')
+
+# axs.set_ylim(B_values.min()-0.001, B_values.max()*(1+0.05))
+# axs.set_xlim(model_CyB.t.min(), model_CyB.t.max())
+
+# Dates as x axis
+dates = generate_dates(2023)
+x_ticks = axs.xaxis.get_ticklocs()
+
+if len(dates) > len(x_ticks):
+    x_stape = round(len(dates) / len(x_ticks), 0)
+    x_labels = [dates[int(x_val)] for x_val in x_ticks[:-1]]
+    axs.xaxis.set_ticklabels(x_labels,
+                             rotation=30)
+else:
+    x_labels = dates
+    axs.xaxis.set_ticklabels(x_labels,
+                             rotation=30)
+
+# plt.legend()
+plt.tight_layout()
 
 # Save plots
 # path = './New data/Images/Year v_1/'

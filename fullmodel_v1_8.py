@@ -99,8 +99,7 @@ params = {
     "r_Y": 1,
     "r_W": 1,
     "Ext_Y": 0.4,
-    "Ext_W": 0.4,
-    "NormM": 0.05
+    "Ext_W": 0.4
 }
 
 # Define functions

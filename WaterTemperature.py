@@ -122,16 +122,18 @@ class WaterTemperature(object):
         return pd.DataFrame(data)
 
 
-watertemperature = WaterTemperature()
-# watertemperature.lon = -114.0953
-# watertemperature.lat = 53.0386
-# watertemperature.setROI(20000)
+lakeboundary = {'PIGEON LAKE': './BoundaryLake/PigeonLake/pige_bdy_py_tm.shp',
+                'CHESTERMERE LAKE': './BoundaryLake/ChestermereLake/ches_bdy_py_tm.shp',
+                'MINNIE LAKE': './BoundaryLake/MinnieLake/minn_bdy_py_tm.shp'}
 
-path = './DIG_2008_0828/'
-name = 'pige_bdy_py_tm.shp'
-watertemperature.roi = geemap.shp_to_ee(path+name)
+# path = './DIG_2008_0828/'
+# name = 'pige_bdy_py_tm.shp'
+
 years = ['2019', '2020', '2021', '2022', '2023']
 pathData = "./ERA5-Land/"
-for year in years:
-    df = watertemperature.getWaterTempDates(year+"-05-01", year+"-09-30")
-    df.to_csv(pathData+year+"PIGEON LAKEWaterTemperature.csv")
+for lake in lakeboundary:
+    watertemperature = WaterTemperature()
+    watertemperature.roi = geemap.shp_to_ee(lakeboundary[lake])
+    for year in years:
+        df = watertemperature.getWaterTempDates(year+"-05-01", year+"-09-30")
+        df.to_csv(pathData+year+lake+"WaterTemperature.csv")
