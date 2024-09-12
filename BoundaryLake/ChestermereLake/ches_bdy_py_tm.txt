@@ -1,0 +1,192 @@
+Identification Information: 
+  Citation: 
+    Citation Information: 
+      Originator: Alberta Environment
+      Originator: Energy Resources Conservation Board
+      Originator: Alberta Geological Survey
+      Publication Date: 2008
+      Title: Chestermere Lake, Alberta - Boundary (GIS data, polygon features)
+      Geospatial Data Presentation Form: vector digital data
+      Series Information: 
+        Series Name: Digital Data
+        Issue Identification: DIG 2008-0734
+      Publication Information: 
+        Publication Place: Edmonton, Alberta, Canada
+        Publisher: Alberta Geological Survey
+      Online Linkage: http://www.ags.gov.ab.ca/publications/DIG/ZIP/DIG_2008_0734.zip
+  Description: 
+    Abstract: All available bathymetry and related information for Chestermere Lake were collected and hard copy maps digitized where necessary. The data were validated against more recent data (Shuttle Radar Topography Mission 'SRTM' imagery and Indian Remote Sensing 'IRS'  imagery) and corrected where necessary. The published data set contains the lake bathymetry formatted as an Arc ascii grid. Bathymetric contours and the boundary polygon are available as shapefiles.
+    Purpose: This dataset was created to preserve historical data for Chestermere Lake and to make the data available in digital form.
+    Supplemental Information: Language: In English
+  Time Period of Content: 
+    Time Period Information: 
+      Single Date/Time: 
+        Calendar Date: 2008
+    Currentness Reference: publication date
+  Status: 
+    Progress: Complete
+    Maintenance and Update Frequency: None planned
+  Spatial Domain: 
+    Bounding Coordinates: 
+      West Bounding Coordinate: -113.827133
+      East Bounding Coordinate: -113.81003
+      North Bounding Coordinate: 51.051977
+      South Bounding Coordinate: 51.01719
+  Keywords: 
+    Theme: 
+      Theme Keyword Thesaurus: none
+      Theme Keyword: bathymetry
+      Theme Keyword: dem
+      Theme Keyword: gis data
+      Theme Keyword: lakes
+    Place: 
+      Place Keyword Thesaurus: none
+      Place Keyword: 82p
+      Place Keyword: alberta
+      Place Keyword: canada
+      Place Keyword: chestermere lake
+  Access Constraints: Public
+  Use Constraints: Acknowledgement of the Alberta Energy Regulator/Alberta Geological Survey as the originator/source of this information is required as described in the Open Government License - Alberta.
+  Point of Contact: 
+    Contact Information: 
+      Contact Organization Primary: 
+        Contact Organization: Alberta Geological Survey
+        Contact Person: Publications and Marketing Advisor
+      Contact Position: Publications and Marketing Advisor
+      Contact Address: 
+        Address Type: mailing and physical
+        Address: Alberta Energy Regulator
+        Address: 4th Floor, Twin Atria Building
+        Address: 4999-98 Avenue NW
+        City: Edmonton
+        State or Province: Alberta
+        Postal Code: T6B 2X3
+        Country: Canada
+      Contact Voice Telephone: (780) 422-1927
+      Contact Facsimile Telephone: (780) 422-1918
+      Contact Electronic Mail Address: AGS-Info@aer.ca
+      Hours of Service: 8:00 a.m. to 12:00 p.m. and 1:00 p.m. to 4:30 p.m.
+  Data Set Credit: Alberta Environment and the Alberta Geological Survey for supporting the project; GISmo Solutions Ltd. for creating the digital product from the hard copy maps and other data sources.
+  Native Data Set Environment: Microsoft Windows 2000 Version 5.0 (Build 2195) Service Pack 4; ESRI ArcCatalog 8.3.0.800
+  Cross Reference: 
+    Citation Information: 
+      Originator: Alberta Environment
+      Originator: Energy Resources Conservation Board
+      Originator: Alberta Geological Survey
+      Publication Date: 2008
+      Title: Chestermere Lake, Alberta - Bathymetry, Digital Elevation Model (Arc ascii grid format)
+      Geospatial Data Presentation Form: raster digital data
+      Series Information: 
+        Series Name: Digital Data
+        Issue Identification: DIG 2008-0396
+      Publication Information: 
+        Publication Place: Edmonton, Alberta, Canada
+        Publisher: Alberta Geological Survey
+      Online Linkage: http://www.ags.gov.ab.ca/publications
+  Cross Reference: 
+    Citation Information: 
+      Originator: Alberta Environment
+      Originator: Energy Resources Conservation Board
+      Originator: Alberta Geological Survey
+      Publication Date: 2008
+      Title: Chestermere Lake, Alberta - Bathymetry (GIS data, line features)
+      Geospatial Data Presentation Form: vector digital data
+      Series Information: 
+        Series Name: Digital Data
+        Issue Identification: DIG 2008-0565
+      Publication Information: 
+        Publication Place: Edmonton, Alberta, Canada
+        Publisher: Alberta Geological Survey
+      Online Linkage: http://www.ags.gov.ab.ca/publications
+Data Quality Information: 
+  Logical Consistency Report: Polylines represent lake shorelines and do not cross or overlap.
+  Completeness Report: Unknown.
+  Lineage: 
+    Process Step: 
+      Process Description: Lake outline data were prepared by GISmo solutions Ltd. Using provincial base hydrography GIS data as a start, each boundary was edited using lake-specific supplemental information which included hardcopy hydrographic survey maps, water level data, area/volume assessments, and IRS and TARIN imagery. The final outline and its reference elevation were validated against the shuttle radar topography mission (SRTM) data for Alberta.
+      Process Date: 2004
+Spatial Data Organization Information: 
+  Direct Spatial Reference Method: Vector
+  Point and Vector Object Information: 
+    SDTS Terms Description: 
+      SDTS Point and Vector Object Type: G-polygon
+      Point and Vector Object Count: 1
+Spatial Reference Information: 
+  Horizontal Coordinate System Definition: 
+    Planar: 
+      Planar Coordinate Information: 
+        Planar Coordinate Encoding Method: coordinate pair
+        Planar Distance Units: METER
+        Coordinate Representation: 
+          Abscissa Resolution: 0.000000
+          Ordinate Resolution: 0.000000
+      Map Projection: 
+        Map Projection Name: Transverse Mercator
+        Transverse Mercator: 
+          Scale Factor at Central Meridian: 0.999200
+          Longitude of Central Meridian: -115.000000
+          Latitude of Projection Origin: 0.000000
+          False Easting: 500000.000000
+          False Northing: 0.000000
+    Geodetic Model: 
+      Horizontal Datum Name: North_American_Datum_1983
+      Ellipsoid Name: Geodetic Reference System of 1980
+      Semi-Major Axis: 6378137.000000
+      Denominator of Flattening Ratio: 298.257222
+Entity and Attribute Information: 
+  Detailed Description: 
+    Entity Type: 
+      Entity Type Label: ches_bdy_py_tm.dbf
+    Attribute: 
+      Attribute Label: DESCRIPTIO
+      Attribute Definition: Feature description
+      Attribute Definition Source: Alberta Geological Survey
+      Attribute Domain Values: 
+        Unrepresentable Domain: Free text
+Distribution Information: 
+  Distributor: 
+    Contact Information: 
+      Contact Organization Primary: 
+        Contact Organization: Alberta Geological Survey
+        Contact Person: Publications and Marketing Advisor
+      Contact Position: Publications and Marketing Advisor
+      Contact Address: 
+        Address Type: mailing and physical
+        Address: Alberta Energy Regulator
+        Address: 4th Floor, Twin Atria Building
+        Address: 4999-98 Avenue NW
+        City: Edmonton
+        State or Province: Alberta
+        Postal Code: T6B 2X3
+        Country: Canada
+      Contact Voice Telephone: (780) 422-1927
+      Contact Facsimile Telephone: (780) 422-1918
+      Contact Electronic Mail Address: AGS-Info@aer.ca
+      Hours of Service: 8:00 a.m. to 12:00 p.m. and 1:00 p.m. to 4:30 p.m.
+  Distribution Liability: The Alberta Energy Regulator/Alberta Geological Survey (AER/AGS) licenses this information under the Open Government License - Alberta. Any references to proprietary software in our documentation, and/or any use of proprietary data formats in our releases, do not constitute endorsement by the AER/AGS of any manufacturer's product.
+Metadata Reference Information: 
+  Metadata Date: 20131107
+  Metadata Contact: 
+    Contact Information: 
+      Contact Organization Primary: 
+        Contact Organization: Alberta Geological Survey
+        Contact Person: Publications and Marketing Advisor
+      Contact Position: Publications and Marketing Advisor
+      Contact Address: 
+        Address Type: mailing and physical
+        Address: Alberta Energy Regulator
+        Address: 4th Floor, Twin Atria Building
+        Address: 4999-98 Avenue NW
+        City: Edmonton
+        State or Province: Alberta
+        Postal Code: T6B 2X3
+        Country: Canada
+      Contact Voice Telephone: (780) 422-1927
+      Contact Facsimile Telephone: (780) 422-1918
+      Contact Electronic Mail Address: AGS-Info@aer.ca
+      Hours of Service: 8:00 a.m. to 12:00 p.m. and 1:00 p.m. to 4:30 p.m.
+  Metadata Standard Name: FGDC Content Standard for Digital Geospatial Metadata
+  Metadata Standard Version: FGDC-STD-001-1998
+  Metadata Time Convention: local time
+  Metadata Access Constraints: none
+  Metadata Use Constraints: none

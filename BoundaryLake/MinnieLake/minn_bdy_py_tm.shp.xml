@@ -1,0 +1,255 @@
+<?xml version="1.0"?>
+<metadata>
+<idinfo>
+  <citation>
+    <citeinfo>
+      <origin>Alberta Environment</origin>
+      <origin>Energy Resources Conservation Board</origin>
+      <origin>Alberta Geological Survey</origin>
+      <pubdate>2008</pubdate>
+      <title>Minnie Lake, Alberta - Boundary (GIS data, polygon features)</title>
+      <geoform>vector digital data</geoform>
+      <serinfo>
+        <sername>Digital Data</sername>
+        <issue>DIG 2008-0810</issue>
+      </serinfo>
+      <pubinfo>
+        <pubplace>Edmonton, Alberta, Canada</pubplace>
+        <publish>Alberta Geological Survey</publish>
+      </pubinfo>
+      <onlink>http://www.ags.gov.ab.ca/publications/DIG/ZIP/DIG_2008_0810.zip</onlink>
+    </citeinfo>
+  </citation>
+  <descript>
+    <abstract>All available bathymetry and related information for Minnie Lake were collected and hard copy maps digitized where necessary. The data were validated against more recent data (Shuttle Radar Topography Mission &apos;SRTM&apos; imagery and Indian Remote Sensing &apos;IRS&apos;  imagery) and corrected where necessary. The published data set contains the lake bathymetry formatted as an Arc ascii grid. Bathymetric contours and the boundary polygon are available as shapefiles.</abstract>
+    <purpose>This dataset was created to preserve historical data for Minnie Lake and to make the data available in digital form.</purpose>
+    <supplinf>Language: In English</supplinf>
+  </descript>
+  <timeperd>
+    <timeinfo>
+      <sngdate>
+        <caldate>2008</caldate>
+      </sngdate>
+    </timeinfo>
+    <current>publication date</current>
+  </timeperd>
+  <status>
+    <progress>Complete</progress>
+    <update>None planned</update>
+  </status>
+  <spdom>
+    <bounding>
+      <westbc>-111.110683</westbc>
+      <eastbc>-111.097594</eastbc>
+      <northbc>54.296684</northbc>
+      <southbc>54.278552</southbc>
+    </bounding>
+  </spdom>
+  <keywords>
+    <theme>
+      <themekt>none</themekt>
+      <themekey>bathymetry</themekey>
+      <themekey>dem</themekey>
+      <themekey>gis data</themekey>
+      <themekey>lakes</themekey>
+    </theme>
+    <theme>
+      <themekt>ISO 19115 Topic Category</themekt>
+      <themekey>geoscientificInformation</themekey>
+    </theme>
+    <place>
+      <placekt>none</placekt>
+      <placekey>73l</placekey>
+      <placekey>alberta</placekey>
+      <placekey>canada</placekey>
+      <placekey>minnie lake</placekey>
+    </place>
+  </keywords>
+  <accconst>Public</accconst>
+  <useconst>Acknowledgement of the Alberta Energy Regulator/Alberta Geological Survey as the originator/source of this information is required as described in the Open Government License - Alberta.</useconst>
+  <ptcontac>
+    <cntinfo>
+      <cntorgp>
+        <cntorg>Alberta Geological Survey</cntorg>
+        <cntper>Publications and Marketing Advisor</cntper>
+      </cntorgp>
+      <cntpos>Publications and Marketing Advisor</cntpos>
+      <cntaddr>
+        <addrtype>mailing and physical</addrtype>
+        <address>Alberta Energy Regulator</address>
+        <address>4th Floor, Twin Atria Building</address>
+        <address>4999-98 Avenue NW</address>
+        <city>Edmonton</city>
+        <state>Alberta</state>
+        <postal>T6B 2X3</postal>
+        <country>Canada</country>
+      </cntaddr>
+      <cntvoice>(780) 422-1927</cntvoice>
+      <cntfax>(780) 422-1918</cntfax>
+      <cntemail>AGS-Info@aer.ca</cntemail>
+      <hours>8:00 a.m. to 12:00 p.m. and 1:00 p.m. to 4:30 p.m.</hours>
+    </cntinfo>
+  </ptcontac>
+  <datacred>Alberta Environment and the Alberta Geological Survey for supporting the project; GISmo Solutions Ltd. for creating the digital product from the hard copy maps and other data sources.</datacred>
+  <native>Microsoft Windows 2000 Version 5.0 (Build 2195) Service Pack 4; ESRI ArcCatalog 8.3.0.800</native>
+  <crossref>
+    <citeinfo>
+      <origin>Alberta Environment</origin>
+      <origin>Energy Resources Conservation Board</origin>
+      <origin>Alberta Geological Survey</origin>
+      <pubdate>2008</pubdate>
+      <title>Minnie Lake, Alberta - Bathymetry, Digital Elevation Model (Arc ascii grid format)</title>
+      <geoform>raster digital data</geoform>
+      <serinfo>
+        <sername>Digital Data</sername>
+        <issue>DIG 2008-0472</issue>
+      </serinfo>
+      <pubinfo>
+        <pubplace>Edmonton, Alberta, Canada</pubplace>
+        <publish>Alberta Geological Survey</publish>
+      </pubinfo>
+      <onlink>http://www.ags.gov.ab.ca/publications</onlink>
+    </citeinfo>
+  </crossref>
+  <crossref>
+    <citeinfo>
+      <origin>Alberta Environment</origin>
+      <origin>Energy Resources Conservation Board</origin>
+      <origin>Alberta Geological Survey</origin>
+      <pubdate>2008</pubdate>
+      <title>Minnie Lake, Alberta - Bathymetry (GIS data, line features)</title>
+      <geoform>vector digital data</geoform>
+      <serinfo>
+        <sername>Digital Data</sername>
+        <issue>DIG 2008-0641</issue>
+      </serinfo>
+      <pubinfo>
+        <pubplace>Edmonton, Alberta, Canada</pubplace>
+        <publish>Alberta Geological Survey</publish>
+      </pubinfo>
+      <onlink>http://www.ags.gov.ab.ca/publications</onlink>
+    </citeinfo>
+  </crossref>
+</idinfo>
+<dataqual>
+  <logic>Polylines represent lake shorelines and do not cross or overlap.</logic>
+  <complete>Unknown.</complete>
+  <lineage>
+    <procstep>
+      <procdesc>Lake outline data were prepared by GISmo solutions Ltd. Using provincial base hydrography GIS data as a start, each boundary was edited using lake-specific supplemental information which included hardcopy hydrographic survey maps, water level data, area/volume assessments, and IRS and TARIN imagery. The final outline and its reference elevation were validated against the shuttle radar topography mission (SRTM) data for Alberta.</procdesc>
+      <procdate>2004</procdate>
+    </procstep>
+  </lineage>
+</dataqual>
+<spdoinfo>
+  <direct>Vector</direct>
+  <ptvctinf>
+    <sdtsterm>
+      <sdtstype>G-polygon</sdtstype>
+      <ptvctcnt>1</ptvctcnt>
+    </sdtsterm>
+  </ptvctinf>
+</spdoinfo>
+<spref>
+  <horizsys>
+    <planar>
+      <planci>
+        <plance>coordinate pair</plance>
+        <plandu>METER</plandu>
+        <coordrep>
+          <absres>0.000000</absres>
+          <ordres>0.000000</ordres>
+        </coordrep>
+      </planci>
+      <mapproj>
+        <mapprojn>Transverse Mercator</mapprojn>
+        <transmer>
+          <sfctrmer>0.999200</sfctrmer>
+          <longcm>-115.000000</longcm>
+          <latprjo>0.000000</latprjo>
+          <feast>500000.000000</feast>
+          <fnorth>0.000000</fnorth>
+        </transmer>
+      </mapproj>
+    </planar>
+    <geodetic>
+      <horizdn>North_American_Datum_1983</horizdn>
+      <ellips>Geodetic Reference System of 1980</ellips>
+      <semiaxis>6378137.000000</semiaxis>
+      <denflat>298.257222</denflat>
+    </geodetic>
+  </horizsys>
+</spref>
+<eainfo>
+  <detailed>
+    <enttyp>
+      <enttypl>minn_bdy_py_tm.dbf</enttypl>
+    </enttyp>
+    <attr>
+      <attrlabl>DESCRIPTIO</attrlabl>
+      <attrdef>Feature description</attrdef>
+      <attrdefs>Alberta Geological Survey</attrdefs>
+      <attrdomv>
+        <udom>Free text</udom>
+      </attrdomv>
+    </attr>
+  </detailed>
+</eainfo>
+<distinfo>
+  <distrib>
+    <cntinfo>
+      <cntorgp>
+        <cntorg>Alberta Geological Survey</cntorg>
+        <cntper>Publications and Marketing Advisor</cntper>
+      </cntorgp>
+      <cntpos>Publications and Marketing Advisor</cntpos>
+      <cntaddr>
+        <addrtype>mailing and physical</addrtype>
+        <address>Alberta Energy Regulator</address>
+        <address>4th Floor, Twin Atria Building</address>
+        <address>4999-98 Avenue NW</address>
+        <city>Edmonton</city>
+        <state>Alberta</state>
+        <postal>T6B 2X3</postal>
+        <country>Canada</country>
+      </cntaddr>
+      <cntvoice>(780) 422-1927</cntvoice>
+      <cntfax>(780) 422-1918</cntfax>
+      <cntemail>AGS-Info@aer.ca</cntemail>
+      <hours>8:00 a.m. to 12:00 p.m. and 1:00 p.m. to 4:30 p.m.</hours>
+    </cntinfo>
+  </distrib>
+  <distliab>The Alberta Energy Regulator/Alberta Geological Survey (AER/AGS) licenses this information under the Open Government License - Alberta. Any references to proprietary software in our documentation, and/or any use of proprietary data formats in our releases, do not constitute endorsement by the AER/AGS of any manufacturer&apos;s product.</distliab>
+</distinfo>
+<metainfo>
+  <metd>20131107</metd>
+  <metc>
+    <cntinfo>
+      <cntorgp>
+        <cntorg>Alberta Geological Survey</cntorg>
+        <cntper>Publications and Marketing Advisor</cntper>
+      </cntorgp>
+      <cntpos>Publications and Marketing Advisor</cntpos>
+      <cntaddr>
+        <addrtype>mailing and physical</addrtype>
+        <address>Alberta Energy Regulator</address>
+        <address>4th Floor, Twin Atria Building</address>
+        <address>4999-98 Avenue NW</address>
+        <city>Edmonton</city>
+        <state>Alberta</state>
+        <postal>T6B 2X3</postal>
+        <country>Canada</country>
+      </cntaddr>
+      <cntvoice>(780) 422-1927</cntvoice>
+      <cntfax>(780) 422-1918</cntfax>
+      <cntemail>AGS-Info@aer.ca</cntemail>
+      <hours>8:00 a.m. to 12:00 p.m. and 1:00 p.m. to 4:30 p.m.</hours>
+    </cntinfo>
+  </metc>
+  <metstdn>FGDC Content Standard for Digital Geospatial Metadata</metstdn>
+  <metstdv>FGDC-STD-001-1998</metstdv>
+  <mettc>local time</mettc>
+  <metac>none</metac>
+  <metuc>none</metuc>
+</metainfo>
+</metadata>
