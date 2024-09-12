@@ -71,11 +71,12 @@ def read_params():
 
     # params_fit = pd.read_csv(
     #     "fitting_parameters_full_variables_v12021Pine Lake_v2__final.csv")
-    unknow_params = ["e_BD", "alpha_B", "alpha_D",
-                     "alpha_Y",
-                     "tau_B", "tau_D", "tau_Y",
-                     "a_A", "a_D", "sigma_A",
-                     "sigma_D", "x_A", "x_D"]
+    unknow_params = ["alpha_D", "alpha_Y",
+                     "tau_D", "tau_Y",
+                     "a_A", "a_D",
+                     "sigma_A", "sigma_D",
+                     "x_A", "x_D",
+                     "n_D"]
 
     model_CyB.initial[1] = params_fit["B_0"][0]
     model_CyB.initial[2] = params_fit["A_0"][0]
@@ -85,14 +86,14 @@ def read_params():
         model_CyB.params[name] = params_fit[name][0]
 
     # Death Daphnia
-    model_CyB.params['n_D'] = 0.0623
-    model_CyB.params['e_BD'] = 0.8
-    model_CyB.params["tau_B"] = 1.23
-    model_CyB.params["alpha_B"] = 0.0035
-    model_CyB.params['r_Y'] = 2
-    model_CyB.params['r_W'] = 1
-    model_CyB.params['Ext_Y'] = 0.025*13
-    model_CyB.params['Ext_W'] = 0.025
+    # model_CyB.params['n_D'] = 0.0623
+    # model_CyB.params['e_BD'] = 0.8
+    # model_CyB.params["tau_B"] = 1.23
+    # model_CyB.params["alpha_B"] = 0.0035
+    # model_CyB.params['r_Y'] = 2
+    # model_CyB.params['r_W'] = 1
+    # model_CyB.params['Ext_Y'] = 0.025*13
+    # model_CyB.params['Ext_W'] = 0.025
     # model_CyB.params['p'] = 0.9
     model_CyB.params['p_in'] = 0.03  # 0.09601  # 0.125  # (0.009601/2)*0
 

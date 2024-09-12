@@ -114,11 +114,11 @@ model_CyB.get_interpZm(Zmsample, days)
 # y_data = data_fit["Total cyanobacterial cell count (cells/mL)Tra"].values
 
 
-unknow_params = ["alpha_D",
-                 "alpha_Y",
+unknow_params = ["alpha_D", "alpha_Y",
                  "tau_D", "tau_Y",
-                 "a_A", "a_D", "sigma_A",
-                 "sigma_D", "x_A", "x_D",
+                 "a_A", "a_D",
+                 "sigma_A", "sigma_D",
+                 "x_A", "x_D",
                  "n_D"]
 
 
