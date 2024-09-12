@@ -14,7 +14,7 @@ A_0 = 0.05
 B_0 = 0.004  # 0.004
 Q_B_0 = 0.01
 Q_A_0 = 0.01
-P_0 = 0.0117  # 10
+P_0 = 0.06  # 10
 D_0 = 0.0239  # 0.0239
 Y_0 = 0.025
 W_0 = 0.0025
@@ -52,13 +52,15 @@ labels = ['MICROCYSTIN, TOTAL',
           'OXYGEN DISSOLVED (FIELD METER)',
           'Total cyanobacterial cell count (cells/mL)']
 
-labels = ['Total cyanobacterial cell count (cells/mL)']
+labels = ['MICROCYSTIN, TOTAL',
+          'OXYGEN DISSOLVED (FIELD METER)',
+          'Total cyanobacterial cell count (cells/mL)']
 
 
 years = ['2018', '2019', '2020', '2021', '2022', '2023']
 years = ['2021']
-coment = "_v6_" + labels[-1][:13]
-
+# coment = "_v3_" + labels[-1][:13]
+coment = "_v5_3Var_"
 data_fit = extractData(data, years, labels, lake_name)
 
 data = None
@@ -89,7 +91,7 @@ model_CyB.params['r_Y'] = 2
 model_CyB.params['r_W'] = 1
 model_CyB.params['Ext_Y'] = 0.025*13
 model_CyB.params['Ext_W'] = 0.025
-
+model_CyB.params['p_in'] = 0.03
 
 # Get Temperature Function
 path = './ERA5-Land/' + years[-1]
@@ -112,12 +114,12 @@ model_CyB.get_interpZm(Zmsample, days)
 # y_data = data_fit["Total cyanobacterial cell count (cells/mL)Tra"].values
 
 
-unknow_params = ["e_BD", "alpha_B", "alpha_D",
+unknow_params = ["alpha_D",
                  "alpha_Y",
-                 "tau_B", "tau_D", "tau_Y",
+                 "tau_D", "tau_Y",
                  "a_A", "a_D", "sigma_A",
                  "sigma_D", "x_A", "x_D",
-                 "n_D", 'p_in', "NormM"]
+                 "n_D"]
 
 
 def model(parameterTuple):
@@ -164,9 +166,9 @@ minimum_params["sigma_A"] = 0.001
 minimum_params["sigma_D"] = 0.001
 minimum_params["x_A"] = 0.001
 minimum_params["x_D"] = 0.001
-minimum_params["n_D"] = 0.001
-minimum_params['p_in'] = 0.001
-minimum_params["NormM"] = 0.01
+minimum_params["n_D"] = 0.0206
+# minimum_params['p_in'] = 0.001
+# minimum_params["NormM"] = 0.01
 
 # Maximums
 maximum_params = {}
@@ -183,9 +185,9 @@ maximum_params["sigma_A"] = 0.01
 maximum_params["sigma_D"] = 0.01
 maximum_params["x_A"] = 0.01
 maximum_params["x_D"] = 0.01
-maximum_params["n_D"] = 0.15
-maximum_params['p_in'] = 0.3
-maximum_params["NormM"] = 1
+maximum_params["n_D"] = 0.25
+# maximum_params['p_in'] = 0.3
+# maximum_params["NormM"] = 1
 
 param_bounds = [(0, 0.1),  # B(0)
                 (0, 0.1),  # A(0)
@@ -216,7 +218,7 @@ def sumOfSquaredError(parameterTuple, *args):
         for day in dayslabel:
             dataday = data_fit[label][day]
             dataday = dataday[dataday != -999]
-            if len(dataday) != 0:
+            if len(dataday) != 0 and day < days_end:
                 samples += 1
                 # print(dataday, label, ModelOutput[int((day - day_start)*3)])
                 ans1 += ((dataday -
@@ -291,22 +293,44 @@ best_solution = None
 best_error = 100
 
 
-result = differential_evolution(
-    sumOfSquaredError,
-    bounds=param_bounds,
-    disp=True,
-    seed=0,
-    strategy=strategies[0],
-    # x0=initial_guess,
-    maxiter=25,
-    updating="immediate",
-    # workers=6,
-    # callback=callback_1,
-    popsize=15,
-    polish=False,
-    tol=0.01)
+def getParameteres(updating="immediate", workers=-1):
+    if updating == "immediate":
+        result = differential_evolution(
+            sumOfSquaredError,
+            bounds=param_bounds,
+            disp=True,
+            seed=0,
+            strategy=strategies[0],
+            # x0=initial_guess,
+            maxiter=25,
+            updating=updating,
+            # workers=6,
+            # callback=callback_1,
+            popsize=15,
+            polish=False,
+            tol=0.01)
+    elif updating == "deferred":
+        result = differential_evolution(
+            sumOfSquaredError,
+            bounds=param_bounds,
+            disp=True,
+            seed=0,
+            strategy=strategies[0],
+            # x0=initial_guess,
+            maxiter=25,
+            updating=updating,
+            workers=workers,
+            # callback=callback_1,
+            popsize=15,
+            polish=False,
+            tol=0.01)
+    return result
 
 
+# if __name__ == '__main__':
+#     result = getParameteres(updating="deferred", workers=5)
+
+result = getParameteres(updating="immediate")
 df = pd.DataFrame(all_solutions_errors,
                   index=[lake_name] * len(all_solutions_errors),
                   columns=["B_0", "A_0", "D_0"] + unknow_params + ["MSE", "MSEM", "MSEB", "MSEP", "MSEO"])
