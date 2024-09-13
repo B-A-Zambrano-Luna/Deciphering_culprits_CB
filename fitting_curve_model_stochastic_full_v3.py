@@ -60,7 +60,7 @@ labels = ['MICROCYSTIN, TOTAL',
 years = ['2018', '2019', '2020', '2021', '2022', '2023']
 years = ['2021']
 # coment = "_v3_" + labels[-1][:13]
-coment = "_v5_3Var_"
+coment = "_v6_3Var_"
 data_fit = extractData(data, years, labels, lake_name)
 
 data = None
@@ -153,11 +153,8 @@ def model(parameterTuple):
 
 # Minimum
 minimum_params = {}
-minimum_params["e_BD"] = 0.65
-minimum_params["alpha_B"] = 0.001
 minimum_params["alpha_D"] = 0.001
 minimum_params["alpha_Y"] = 0.0001
-minimum_params["tau_B"] = 0.123
 minimum_params["tau_D"] = 0.5
 minimum_params["tau_Y"] = 0.5
 minimum_params["a_A"] = 0.001
@@ -172,11 +169,8 @@ minimum_params["n_D"] = 0.0206
 
 # Maximums
 maximum_params = {}
-maximum_params["e_BD"] = 0.8
-maximum_params["alpha_B"] = 0.01
 maximum_params["alpha_D"] = 0.01
 maximum_params["alpha_Y"] = 0.013
-maximum_params["tau_B"] = 2
 maximum_params["tau_D"] = 2
 maximum_params["tau_Y"] = 2
 maximum_params["a_A"] = 0.1
@@ -186,8 +180,7 @@ maximum_params["sigma_D"] = 0.01
 maximum_params["x_A"] = 0.01
 maximum_params["x_D"] = 0.01
 maximum_params["n_D"] = 0.25
-# maximum_params['p_in'] = 0.3
-# maximum_params["NormM"] = 1
+
 
 param_bounds = [(0, 0.1),  # B(0)
                 (0, 0.1),  # A(0)
