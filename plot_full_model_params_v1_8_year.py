@@ -17,11 +17,11 @@ A_0 = 0.05
 B_0 = 0.004  # 0.004
 Q_B_0 = 0.01
 Q_A_0 = 0.01
-P_0 = 0.0117  # 10
+P_0 = 0.05  # 10
 D_0 = 0.0239  # 0.0239
-Y_0 = 0.025
-W_0 = 0.0025
-O_0 = 6
+Y_0 = 0.025*10
+W_0 = 0.0025*10
+O_0 = 5
 v_A_0 = 0
 v_D_0 = 0
 v_Y_0 = 0
@@ -42,7 +42,7 @@ initial_conditions = [M_0, B_0, A_0,
 # Data
 data = pd.read_csv(
     "merged_water_quality_data.csv", low_memory=False)
-lake_name = "PIGEON LAKE"
+lake_name = "PIGEON LAKE"  # "MINNIE LAKE"  # "PIGEON LAKE"
 labels = ['MICROCYSTIN, TOTAL',
           'PHOSPHORUS TOTAL DISSOLVED',
           'OXYGEN DISSOLVED (FIELD METER)',
@@ -50,11 +50,12 @@ labels = ['MICROCYSTIN, TOTAL',
           'TEMPERATURE WATER']
 # labels = ['Total cyanobacterial cell count (cells/mL)',
 #           'TEMPERATURE WATER']
-years = ['2018', '2019', '2020', '2021', '2022', '2023']
-years = ['2021']
-coment = "_v4_"
+# years = ['2018', '2019', '2020', '2021', '2022', '2023']
+years = ['2021']  # ['2019']  # ['2021']
+coment = "_v6_3Var_"  # "_v4_3Var_"  # "_v4_"
 
 data_fit = extractData(data, years, labels, lake_name)
+
 # # import parameters
 
 
@@ -62,19 +63,19 @@ def read_params():
     model_CyB = fullmodel_v1_8.modelCyB()
     model_CyB.initial = initial_conditions
     name_data_param = "fitting_parameters_full_variables_v1"
-    coment = "_v1_7_"
     name_data = './FittedParameters/' + \
-        'fitting_parameters_full_variables_v2PIGEON LAKE_v3__final' + ".csv"
-
+        'fitting_parameters_full_variables_v2'+lake_name + coment + '_final' + ".csv"
+    # name_data = './FittedParameters/' + \
+    #     "fitting_parameters_full_variables_v12021Pigeon Lake_v2__final.csv"
     params_fit = pd.read_csv(name_data)
 
     # params_fit = pd.read_csv(
     #     "fitting_parameters_full_variables_v12021Pine Lake_v2__final.csv")
-    unknow_params = ["e_BD", "alpha_B", "alpha_D",
-                     "alpha_Y",
-                     "tau_B", "tau_D", "tau_Y",
-                     "a_A", "a_D", "sigma_A",
-                     "sigma_D", "x_A", "x_D"]
+    unknow_params = ["alpha_D", "alpha_Y",
+                     "tau_D", "tau_Y",
+                     "a_A",
+                     "sigma_A", "sigma_D",
+                     "x_A"]
 
     model_CyB.initial[1] = params_fit["B_0"][0]
     model_CyB.initial[2] = params_fit["A_0"][0]
@@ -82,16 +83,6 @@ def read_params():
 
     for name in unknow_params:
         model_CyB.params[name] = params_fit[name][0]
-
-    # Death Daphnia
-    model_CyB.params['n_D'] = 0.0623
-    model_CyB.params['e_BD'] = 0.8
-    model_CyB.params["tau_B"] = 1.23
-    model_CyB.params["alpha_B"] = 0.0035
-    model_CyB.params['r_Y'] = 2
-    model_CyB.params['r_W'] = 1
-    model_CyB.params['Ext_Y'] = 0.025*13
-    model_CyB.params['Ext_W'] = 0.025
 
     # With Toxine
     model_CyB.toxines = True and (model_CyB.initial[1] > 0)
@@ -109,15 +100,23 @@ def read_params():
 
     model_CyB.set_linetime()
 
-    # Temperature
-    dataTemp = data_fit['TEMPERATURE WATER']
-    days = list(dataTemp.keys())
-    days.sort()
-    days = np.array(days)
-    tempSamp = [dataTemp[day][(dataTemp[day] > -999)].mean() for day in days]
+    # Temperature and Zm
+    path = './ERA5-Land/' + years[-1]
+    TempZmData = pd.read_csv(path+lake_name + 'WaterTemperature.csv')
+    TempZmData['Date'] = pd.to_datetime(
+        TempZmData['Date'], format='mixed')
 
-    model_CyB.get_interpTemp(tempSamp, days-day_start)
+    tempSamp = TempZmData['lake_mix_layer_temperature']
+    Zmsample = (TempZmData['lake_mix_layer_depth_min'] +
+                TempZmData['lake_mix_layer_depth_max'])*0.5
+    days = TempZmData['Date'].dt.day_of_year
+
+    days = np.array(days) - day_start
+
+    model_CyB.get_interpTemp(tempSamp, days)
+    model_CyB.get_interpZm(Zmsample, days)
     return model_CyB
+
 # Fit parameters
 
 
@@ -129,7 +128,7 @@ fill = False
 
 solution, info = model_CyB.solver()
 
-path = './New data/Images/Year v_1/'
+# path = './New data/Images/Year v_1/'
 name = 'Full_model'+".pdf"
 
 # model_CyB.print_solv(title='', all_plot=True,
@@ -232,7 +231,7 @@ print("Model_v1", info["message"])
 ####### Plots ###############
 
 
-threhold = 10
+threhold = 0
 
 
 ####### Color_map##########
@@ -247,10 +246,10 @@ sns.set_style('ticks')
 sns.plotting_context("paper", font_scale=1.5)
 BASE_COLORS = '#FF4500'  # '#B22222'
 LINE_COLOR = '#F0A145'  # '#B7770E'  # '#E1A332'
-SAVE_PLOT = False
+SAVE_PLOT = True
 Print_Values = False
-dates = generate_dates(2021)
-
+dates = generate_dates(2023)
+path = './Figures/Variations/'
 
 ############### Dimensions ######################
 FigsizeAll = (11 / 2.54, 11 / 2.54)
@@ -274,56 +273,55 @@ linewidth = 0.5
 LegendWidth = 2
 
 # Which Plot
-plot_zmKb = True
-box_psition_zmKb = (1.08, 0.98)
+plot_zmKb = False
+box_psition_zmKb = (1.05, 0.98)
 plot_z_m = False
-box_psition_z_m = (1.05, 0.98)
+box_psition_z_m = (1.095, 0.98)
 plot_d_E = False
-box_psition_d_E = (1.065, 0.99)
+box_psition_d_E = (1.095, 0.99)
 plot_phos = False
-box_psition_phos = (1.065, 0.99)
+box_psition_phos = (1.095, 0.99)
 # Different Temperatures peaks
 plot_temp_peak = False
-box_psition_temp_peak = (1.02, 0.895)
+box_psition_temp_peak = (1.095, 0.99)
 
 
 ############ body burning ######################
 
 # bodyburnig and increace temp in peaks
 plot_temp_peak_body = False
-# box_psition_body = (1.02, 0.895)
-box_psition_body = (0.96, 0.895)
+box_psition_body = (1.096, 0.99)
 
 # bodyburnig and increace temp in phosphorus
 plot_phosphorus_body = False
-box_psition_phosphorus_body = (1.065, 0.99)
+box_psition_phosphorus_body = (1.095, 0.99)
 # bodyburnig and increace temp in dE
 plot_dE_body = False
-box_psition_dE_body = (1.065, 0.99)
+box_psition_dE_body = (1.095, 0.99)
 # bodyburnig and increace temp in zm
 plot_zm_body = False
-box_psition_zm_body = (1.05, 0.99)
+box_psition_zm_body = (1.095, 0.99)
 # bodyburnig and increace temp in zmKb
 plot_kbg_body = False
 box_psition_kbg_body = (1.05, 0.99)
 
 ############# Fishes ####################
 # bodyburnig and increace temp in peaks
-plot_temp_peak_fish = False
-box_psition_fish = (0.96, 0.895)
+plot_temp_peak_fish = True
+box_psition_fish = (1.065, 0.99)
 
 # bodyburnig and increace temp in phosphorus
 plot_phosphorus_fish = False
-box_psition_phosphorus_fish = (1.065, 0.99)
+box_psition_phosphorus_fish = (1.095, 0.99)
 # bodyburnig and increace temp in dE
 plot_dE_fish = False
 box_psition_dE_fish = (1.065, 0.99)
 # bodyburnig and increace temp in zm
 plot_zm_fish = False
-box_psition_zm_fish = (1.05, 0.99)
+box_psition_zm_fish = (1.095, 0.99)
 # bodyburnig and increace temp in zmKb
 plot_kbg_fish = False
-box_psition_kbg_fish = (1.05, 0.99)
+box_psition_kbg_fish = (1.095, 0.99)
 
 
 ######## Some function to measure ##########
@@ -389,7 +387,7 @@ if plot_zmKb:
     max_values = [0, 0, 0, 0]
     min_values = [10, 10, 10, 10]
     for i, b in enumerate(zmKb_values):
-        model_CyB.params['z_mK_bg'] = 7*b
+        model_CyB.params['z_mK_bg'] = b
 
         # modelCyB.max_temp = 25.9
         solution, info = model_CyB.solver()
@@ -479,9 +477,9 @@ if plot_zmKb:
                 max_values[j], var[TIMEStap[0]:TIMEStap[1]].max())
             min_values[j] = min(
                 min_values[j], var[TIMEStap[0]:TIMEStap[1]].min())
-            axs[j].set_ylim(min_values[j]*(1-0.05), max_values[j]*(1+0.1))
-            axs[j].set_xlim(model_CyB.t[TIMEStap[0]:TIMEStap[1]].min(),
-                            model_CyB.t[TIMEStap[0]:TIMEStap[1]].max())
+            # axs[j].set_ylim(min_values[j]*(1-0.05), max_values[j]*(1+0.1))
+            # axs[j].set_xlim(model_CyB.t[TIMEStap[0]:TIMEStap[1]].min(),
+            #                 model_CyB.t[TIMEStap[0]:TIMEStap[1]].max())
             # axs[j].yaxis.set_major_formatter(y_formatter)
 
             axs[j].xaxis.set_major_locator(
@@ -548,7 +546,7 @@ if plot_zmKb:
         cbar = fig.colorbar(sm, cax=cbar_ax)
         cbar.set_label('Algae Growth Factor')
 
-    axs[0].axhline(y=10, color=LINE_COLOR, linestyle='dotted')
+    # axs[0].axhline(y=10, color=LINE_COLOR, linestyle='dotted')
     # axs[-1].set_xlabel('Time (days)')
 
     handles, labels = axs[0].get_legend_handles_labels()
@@ -560,7 +558,7 @@ if plot_zmKb:
     plt.tight_layout()
     if SAVE_PLOT:
         # Save plots
-        path = './New data/Images/Year v_1/'
+        # path = './New data/Images/Year v_1/'
         name = 'Backgound Light Attenuation' + FORMAT
 
         plt.savefig(path+name, dpi=RESOLUTION, bbox_inches='tight')
@@ -578,7 +576,7 @@ if plot_z_m:
     y_formatter.orderOfMagnitude = 4  # Set the exponent to 4
 
     # p_values = [0.01, 0.03, 0.05, 0.07]
-    Z_values = list(np.arange(1, 10+1, 1))
+    Z_values = list(np.append(np.round(np.arange(0.5, 3, 0.25), 2), 0))
 
     if all_plot:
         # Create subplots
@@ -615,9 +613,7 @@ if plot_z_m:
 
     for z_m in Z_values:
 
-        model_CyB.params['z_mk_A'] = (z_m*0.0004)*1000
-        model_CyB.params['z_mk_B'] = (z_m*0.0004)*1000
-        model_CyB.params['z_mK_bg'] = (z_m*0.3)
+        model_CyB.auxZm = z_m
 
         # Different temperature
 
@@ -697,11 +693,11 @@ if plot_z_m:
             axs[i].set_ylabel(variables[i])
             color_index = Z_values.index(z_m) % len(colors)
 
-            if z_m != 7:
+            if z_m != 0:
                 line, = axs[i].plot(model_CyB.t, var, color=colors[color_index],
                                     label=f"{z_m} m")
 
-            elif z_m == 7:
+            elif z_m == 0:
                 line, = axs[i].plot(model_CyB.t, var, color=BASE_COLORS,
                                     label=f"{z_m} m (base)")
 
@@ -723,8 +719,8 @@ if plot_z_m:
                 axs[i].xaxis.set_ticklabels(x_labels,
                                             rotation=30)
             axs[i].set_xlabel('')
-            axs[i].set_ylim(min_values[i], max_values[i]*(1+0.05))
-            axs[i].set_xlim(model_CyB.t.min(), model_CyB.t.max())
+            # axs[i].set_ylim(min_values[i], max_values[i]*(1+0.05))
+            # axs[i].set_xlim(model_CyB.t.min(), model_CyB.t.max())
             axs[i].yaxis.set_major_formatter(y_formatter)
             for spine in axs[i].spines.values():
                 spine.set_color('black')  # Set all spines color to black
@@ -734,7 +730,7 @@ if plot_z_m:
             # axs[i].legend()
             # axs[i].grid(True)
 
-    axs[0].axhline(y=10, color=LINE_COLOR, linestyle='dotted')
+    # axs[0].axhline(y=10, color=LINE_COLOR, linestyle='dotted')
     # Set common x-axis label and title
     # axs[-1].set_xlabel('Time (days)')
     if WithTitle:
@@ -744,14 +740,14 @@ if plot_z_m:
     legend = fig.legend(handles, labels, loc='outside upper center',
                         bbox_to_anchor=box_psition_z_m,
                         fancybox=True, shadow=False, ncol=1,
-                        title='Depth of epilimnion')
+                        title='Increase \n depth of epilimnion')
     # plt.setp(legend.get_title(),  multialignment='left', rotation=90)
 
     # Adjust layout for better readability
     plt.tight_layout()
     if SAVE_PLOT:
         # Save plots
-        path = './New data/Images/Year v_1/'
+        # path = './New data/Images/Year v_1/'
         name = 'Full_model_z_m'+FORMAT
         plt.savefig(path+name, dpi=RESOLUTION, bbox_inches='tight')
     # Show the plot
@@ -912,8 +908,8 @@ if plot_d_E:
                 axs[i].xaxis.set_ticklabels(x_labels,
                                             rotation=30)
             axs[i].set_xlabel('')
-            axs[i].set_ylim(min_values[i], max_values[i]*(1+0.05))
-            axs[i].set_xlim(model_CyB.t.min(), model_CyB.t.max())
+            # axs[i].set_ylim(min_values[i], max_values[i]*(1+0.05))
+            # axs[i].set_xlim(model_CyB.t.min(), model_CyB.t.max())
             axs[i].yaxis.set_major_formatter(y_formatter)
             for spine in axs[i].spines.values():
                 spine.set_color('black')  # Set all spines color to black
@@ -923,7 +919,7 @@ if plot_d_E:
             # axs[i].legend()
             # axs[i].grid(True)
 
-    axs[0].axhline(y=10, color=LINE_COLOR, linestyle='dotted')
+    # axs[0].axhline(y=10, color=LINE_COLOR, linestyle='dotted')
     # Set common x-axis label and title
     # axs[-1].set_xlabel('Time (days)')
     if WithTitle:
@@ -940,7 +936,7 @@ if plot_d_E:
     plt.tight_layout()
     if SAVE_PLOT:
         # Save plots
-        path = './New data/Images/Year v_1/'
+        # path = './New data/Images/Year v_1/'
         name = 'Full_model_d_E'+FORMAT
         plt.savefig(path+name, dpi=RESOLUTION, bbox_inches='tight')
     # Show the plot
@@ -958,8 +954,8 @@ if plot_phos:
     y_formatter.orderOfMagnitude = 4  # Set the exponent to 4
 
     # p_values = [0.01, 0.03, 0.05, 0.07]
-    p_values = [0.01, 0.03, 0.05, 0.07, 0.1, 0.2,
-                0.3, 0.4, 0.5, 0.6, 0.7]
+    p_values = [0.01, 0.03, 0.07, 0.1, 0.2,
+                0.3, 0.4, 0.5, 0.6, 0.7, P_0]
     # p_values = [0.1, 0.2, 0.3, 0.4]
     # p_values = [0.5, 0.6, 0.7, 0.8]
 
@@ -1008,11 +1004,11 @@ if plot_phos:
             v_A_values, v_D_values, v_Y_values, \
             v_W_values, O_values = solution.T
 
-        max_O = O_values[130*3:250*3].max()
-        min_O = O_values[130*3:250*3].min()
-        max_M = M_values.max()
-        print('Oxigen reduction: ', (min_O-max_O)/max_O, 'Phos:', p)
-        print("Maximum M Change: ", (max_M-max_M_0)/max_M_0, 'Phos:', p)
+        # max_O = O_values[130*3:250*3].max()
+        # min_O = O_values[130*3:250*3].min()
+        # max_M = M_values.max()
+        # print('Oxigen reduction: ', (min_O-max_O)/max_O, 'Phos:', p)
+        # print("Maximum M Change: ", (max_M-max_M_0)/max_M_0, 'Phos:', p)
         # Print days of bloom toxine
         x_0, x_1 = days_before_after_toxin(M_values, 10)
         avar = Avarage_max_peaks(
@@ -1073,11 +1069,11 @@ if plot_phos:
                 axs[i].set_ylabel(variables[i])
             color_index = p_values.index(p) % len(colors)
 
-            if p != 0.7:
+            if p != P_0:
                 line, = axs[i].plot(model_CyB.t, var, color=colors[color_index],
                                     label=f"{p} mgP/L")  # Collect lines for legend
 
-            elif p == 0.7:
+            elif p == P_0:
                 line, = axs[i].plot(model_CyB.t, var, color=BASE_COLORS,
                                     label=f"{p} mgP/L (base)")
 
@@ -1087,8 +1083,8 @@ if plot_phos:
 
             # all_handles.append(line)
             # all_labels.append(f"P(0)={p}")
-            max_values[i] = max(max_values[i], var.max())
-            min_values[i] = min(min_values[i], var.min())
+            # max_values[i] = max(max_values[i], var.max())
+            # min_values[i] = min(min_values[i], var.min())
             x_ticks = axs[i].xaxis.get_ticklocs()
             if len(dates) > len(x_ticks):
                 x_labels = [DATES[int(x_val)] for x_val in x_ticks[:-1]]
@@ -1099,8 +1095,8 @@ if plot_phos:
                 axs[i].xaxis.set_ticklabels(x_labels,
                                             rotation=30)
             axs[i].set_xlabel('')
-            axs[i].set_ylim(min_values[i], max_values[i]*(1+0.05))
-            axs[i].set_xlim(model_CyB.t.min(), model_CyB.t.max())
+            # axs[i].set_ylim(min_values[i], max_values[i]*(1+0.05))
+            # axs[i].set_xlim(model_CyB.t.min(), model_CyB.t.max())
             axs[i].yaxis.set_major_formatter(y_formatter)
             for spine in axs[i].spines.values():
                 spine.set_color('black')  # Set all spines color to black
@@ -1110,7 +1106,7 @@ if plot_phos:
             # axs[i].legend()
             # axs[i].grid(True)
 
-    axs[0].axhline(y=10, color=LINE_COLOR, linestyle='dotted')
+    # axs[0].axhline(y=10, color=LINE_COLOR, linestyle='dotted')
     # Set common x-axis label and title
     # axs[-1].set_xlabel('Time (days)')
     if WithTitle:
@@ -1127,7 +1123,7 @@ if plot_phos:
     plt.tight_layout()
     if SAVE_PLOT:
         # Save plots
-        path = './New data/Images/Year v_1/'
+        # path = './New data/Images/Year v_1/'
         name = 'Full_model_phos_levels'+FORMAT
         plt.savefig(path+name, dpi=RESOLUTION, bbox_inches='tight')
 
@@ -1146,7 +1142,7 @@ if plot_temp_peak:
     # Temp_increase = [0, 0.4, 0.6, 0.7, 0.8, 1.0, 1.1, 1.4,
     #                  1.7, 2.6, 3.4]
 
-    Temp_increase = np.append(np.round(np.arange(0, 3.4+0.2, 0.2), 1), 0)
+    Temp_increase = np.append(np.round(np.arange(0.2, 3.4+0.2, 0.2), 1), 0)
     Temp_increase = list(Temp_increase)
     # colors = sns.color_palette(map_color, n_colors=len(Temp_increase))
     colors = cm.GnBu(np.linspace(0.3, 1, len(Temp_increase)))
@@ -1169,41 +1165,41 @@ if plot_temp_peak:
     min_values = [10, 10, 10, 10]
     for Temp in Temp_increase:
         model_CyB = read_params()
-        if Temp != 0:
-            # Data Temperature
-            days_temp = np.array(
-                [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334])
-            temp_water = np.array(
-                [7.35, 7.3, 7.91, 9.4, 11.67, 13.59, 15.49, 16.02, 14.08, 11.29, 9.26, 8.07])
+        # if Temp != 0:
+        #     # Data Temperature
+        #     days_temp = np.array(
+        #         [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334])
+        #     temp_water = np.array(
+        #         [7.35, 7.3, 7.91, 9.4, 11.67, 13.59, 15.49, 16.02, 14.08, 11.29, 9.26, 8.07])
 
-            delta_temp = Temp
+        #     delta_temp = Temp
 
-            for i in range(temp_water.shape[0]):
-                if temp_water[i] > 11:
-                    temp_water[i] = temp_water[i] + delta_temp
+        #     for i in range(temp_water.shape[0]):
+        #         if temp_water[i] > 11:
+        #             temp_water[i] = temp_water[i] + delta_temp
 
-            # Define the logistic function
-            def temperature(t, K, T, t_0, k_0):
-                return K*np.exp(-T*(t-t_0)**2)+k_0
+        #     # Define the logistic function
+        #     def temperature(t, K, T, t_0, k_0):
+        #         return K*np.exp(-T*(t-t_0)**2)+k_0
 
-            # Set bounds for positive values
-            bounds = ([0, 0, 0, 0], [np.inf, np.inf, np.inf, np.inf])
+        #     # Set bounds for positive values
+        #     bounds = ([0, 0, 0, 0], [np.inf, np.inf, np.inf, np.inf])
 
-            # Fit the logistic function to the data
-            initial_guess = [15, 0, 200, 7]
-            params, covariance = curve_fit(temperature,
-                                           days_temp,
-                                           temp_water,
-                                           p0=initial_guess,
-                                           bounds=bounds)
+        #     # Fit the logistic function to the data
+        #     initial_guess = [15, 0, 200, 7]
+        #     params, covariance = curve_fit(temperature,
+        #                                    days_temp,
+        #                                    temp_water,
+        #                                    p0=initial_guess,
+        #                                    bounds=bounds)
 
-            model_CyB.max_temp = round(params[0], 5)
-            model_CyB.min_temp = round(params[3], 5)
-            model_CyB.max_temp_time = round(params[2]-20, 5)
-            model_CyB.T = round(params[1], 5)
+        #     model_CyB.max_temp = round(params[0], 5)
+        #     model_CyB.min_temp = round(params[3], 5)
+        #     model_CyB.max_temp_time = round(params[2]-20, 5)
+        #     model_CyB.T = round(params[1], 5)
 
         # Different temperature
-
+        model_CyB.auxTemp = Temp
         # modelCyB.max_temp = 25.9
         solution, info = model_CyB.solver()
         M_values, B_values, A_values, \
@@ -1291,9 +1287,9 @@ if plot_temp_peak:
             min_values[i] = min(
                 min_values[i], var[TIMEStap[0]:TIMEStap[1]].min())
 
-            axs[i].set_ylim(min_values[i]*(1-0.05), max_values[i] * (1+0.1))
-            axs[i].set_xlim(model_CyB.t[TIMEStap[0]:TIMEStap[1]].min(),
-                            model_CyB.t[TIMEStap[0]:TIMEStap[1]].max())
+            # axs[i].set_ylim(min_values[i]*(1-0.05), max_values[i] * (1+0.1))
+            # axs[i].set_xlim(model_CyB.t[TIMEStap[0]:TIMEStap[1]].min(),
+            #                 model_CyB.t[TIMEStap[0]:TIMEStap[1]].max())
 
             axs[i].xaxis.set_major_locator(
                 MaxNLocator(integer=True, nbins=NoBins))
@@ -1340,40 +1336,45 @@ if plot_temp_peak:
                                     linewidth=linewidth)
             elif Temp == 0:
                 line, = axs[i].plot(model_CyB.t, var, color=BASE_COLORS,
-                                    label=f"{Temp}",
+                                    label=f"{Temp} (base)",
                                     linewidth=linewidth)
 
     # Set common x-axis label and title
-    axs[0].axhline(y=10, color=LINE_COLOR, linestyle='dotted')
+    # axs[0].axhline(y=10, color=LINE_COLOR, linestyle='dotted')
     # axs[-1].set_xlabel('Time (days)')
     if WithTitle:
         plt.suptitle(lake_name + ' increase of maximum peaks')
     handles, labels = axs[0].get_legend_handles_labels()
-    if color_bar:
-        # Create a ScalarMappable object
-        sm = plt.cm.ScalarMappable(cmap=map_color, norm=plt.Normalize(
-            vmin=min(Temp_increase), vmax=max(Temp_increase)))
+    # if color_bar:
+    #     # Create a ScalarMappable object
+    #     sm = plt.cm.ScalarMappable(cmap=map_color, norm=plt.Normalize(
+    #         vmin=min(Temp_increase), vmax=max(Temp_increase)))
 
-        # Add color bar to the figure
-        plt.colorbar(sm, ax=axs, cmap=colors)
-    else:
-        handles, labels = axs[0].get_legend_handles_labels()
-        # box_psition = (0.96, 0.88)
-        legend = fig.legend(handles[:-1], labels, loc='outside upper center',
-                            bbox_to_anchor=box_psition_temp_peak,
-                            fancybox=True, shadow=False, ncol=1,
-                            title='Increase \n in $\degree C$',
-                            fontsize=FONTSIZE,
-                            title_fontsize=FONTSIZETITLE)
-        for lineleg in legend.legendHandles:
-            lineleg.set_linewidth(LegendWidth)
+    #     # Add color bar to the figure
+    #     plt.colorbar(sm, ax=axs, cmap=colors)
+    # else:
+    #     handles, labels = axs[0].get_legend_handles_labels()
+    #     # box_psition = (0.96, 0.88)
+    #     legend = fig.legend(handles[:-1], labels, loc='outside upper center',
+    #                         bbox_to_anchor=box_psition_temp_peak,
+    #                         fancybox=True, shadow=False, ncol=1,
+    #                         title='Increase \n in $\degree C$',
+    #                         fontsize=FONTSIZE,
+    #                         title_fontsize=FONTSIZETITLE)
+    #     for lineleg in legend.legendHandles:
+    #         lineleg.set_linewidth(LegendWidth)
+    handles, labels = axs[0].get_legend_handles_labels()
 
+    legend = fig.legend(handles, labels, loc='outside upper center',
+                        bbox_to_anchor=box_psition_temp_peak,
+                        fancybox=True, shadow=False, ncol=1,
+                        title='Increase \n in $\degree C$')
     # Adjust the spacing between subplots
-    plt.subplots_adjust(hspace=hspace, wspace=wspace)
-
+    # plt.subplots_adjust(hspace=hspace, wspace=wspace)
+    plt.tight_layout()
     if SAVE_PLOT:
         # Save plots
-        path = './New data/Images/Year v_1/'
+        # path = './New data/Images/Year v_1/'
         name = 'Full_model_temp_peaks_short_long_term_v2'+FORMAT
         plt.savefig(path+name, dpi=RESOLUTION, bbox_inches='tight')
         print('Image was printed')
@@ -1403,7 +1404,7 @@ if plot_temp_peak_body:
     Temp_increase = [0, 0.4, 0.6, 0.7, 0.8, 1.0, 1.1, 1.4,
                      1.7, 2.6, 3.4]
 
-    Temp_increase = np.round(np.arange(0, 3.4+0.2, 0.2), 1)
+    Temp_increase = np.round(np.arange(0.2, 3.4+0.2, 0.2), 1)
     Temp_increase = list(Temp_increase)
     Temp_increase.append(0)
     # colors = sns.color_palette(map_color, n_colors=len(Temp_increase))
@@ -1431,39 +1432,39 @@ if plot_temp_peak_body:
 
     for Temp in Temp_increase:
         model_CyB = read_params()
-        if Temp != 0:
-            # Data Temperature
-            days_temp = np.array(
-                [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334])
-            temp_water = np.array(
-                [7.35, 7.3, 7.91, 9.4, 11.67, 13.59, 15.49, 16.02, 14.08, 11.29, 9.26, 8.07])
+        # if Temp != 0:
+        #     # Data Temperature
+        #     days_temp = np.array(
+        #         [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334])
+        #     temp_water = np.array(
+        #         [7.35, 7.3, 7.91, 9.4, 11.67, 13.59, 15.49, 16.02, 14.08, 11.29, 9.26, 8.07])
 
-            delta_temp = Temp
+        #     delta_temp = Temp
 
-            for i in range(temp_water.shape[0]):
-                if temp_water[i] > 11:
-                    temp_water[i] = temp_water[i] + delta_temp
+        #     for i in range(temp_water.shape[0]):
+        #         if temp_water[i] > 11:
+        #             temp_water[i] = temp_water[i] + delta_temp
 
-            # Define the logistic function
-            def temperature(t, K, T, t_0, k_0):
-                return K*np.exp(-T*(t-t_0)**2)+k_0
+        #     # Define the logistic function
+        #     def temperature(t, K, T, t_0, k_0):
+        #         return K*np.exp(-T*(t-t_0)**2)+k_0
 
-            # Set bounds for positive values
-            bounds = ([0, 0, 0, 0], [np.inf, np.inf, np.inf, np.inf])
+        #     # Set bounds for positive values
+        #     bounds = ([0, 0, 0, 0], [np.inf, np.inf, np.inf, np.inf])
 
-            # Fit the logistic function to the data
-            initial_guess = [15, 0, 200, 7]
-            params, covariance = curve_fit(temperature,
-                                           days_temp,
-                                           temp_water,
-                                           p0=initial_guess,
-                                           bounds=bounds)
+        #     # Fit the logistic function to the data
+        #     initial_guess = [15, 0, 200, 7]
+        #     params, covariance = curve_fit(temperature,
+        #                                    days_temp,
+        #                                    temp_water,
+        #                                    p0=initial_guess,
+        #                                    bounds=bounds)
 
-            model_CyB.max_temp = round(params[0], 5)
-            model_CyB.min_temp = round(params[3], 5)
-            model_CyB.max_temp_time = round(params[2]-20, 5)
-            model_CyB.T = round(params[1], 5)
-
+        #     model_CyB.max_temp = round(params[0], 5)
+        #     model_CyB.min_temp = round(params[3], 5)
+        #     model_CyB.max_temp_time = round(params[2]-20, 5)
+        #     model_CyB.T = round(params[1], 5)
+        model_CyB.auxTemp = Temp
         # Different temperature
 
         # modelCyB.max_temp = 25.9
@@ -1550,9 +1551,9 @@ if plot_temp_peak_body:
             min_values[i] = min(
                 min_values[i], var[TIMEStap[0]:TIMEStap[1]].min())
 
-            axs[i].set_ylim(min_values[i]*(1-0.05), max_values[i] * (1+0.08))
-            axs[i].set_xlim(model_CyB.t[TIMEStap[0]:TIMEStap[1]].min(),
-                            model_CyB.t[TIMEStap[0]:TIMEStap[1]].max())
+            # axs[i].set_ylim(min_values[i]*(1-0.05), max_values[i] * (1+0.08))
+            # axs[i].set_xlim(model_CyB.t[TIMEStap[0]:TIMEStap[1]].min(),
+            #                 model_CyB.t[TIMEStap[0]:TIMEStap[1]].max())
 
             axs[i].xaxis.set_major_locator(
                 MaxNLocator(integer=True, nbins=NoBins))
@@ -1589,7 +1590,7 @@ if plot_temp_peak_body:
                 x_labels = dates
                 axs[i].xaxis.set_ticklabels(x_labels,
                                             rotation=30)
-            axs[i].set_xlabel('Time (MM-DD)', fontsize=FONTSIZE,
+            axs[i].set_xlabel('', fontsize=FONTSIZE,
                               labelpad=2)
             axs[i].grid(False)
             color_index = Temp_increase.index(Temp) % len(colors)
@@ -1604,36 +1605,43 @@ if plot_temp_peak_body:
                                     linewidth=linewidth)
 
     # Set common x-axis label and title
-    axs[0].axhline(y=10, color=LINE_COLOR, linestyle='dotted')
+    # axs[0].axhline(y=10, color=LINE_COLOR, linestyle='dotted')
     # axs[-1].set_xlabel('Time (days)')
     if WithTitle:
         plt.suptitle(lake_name + ' increase of maximum peaks')
     handles, labels = axs[0].get_legend_handles_labels()
-    if color_bar:
-        # Create a ScalarMappable object
-        sm = plt.cm.ScalarMappable(cmap=map_color, norm=plt.Normalize(
-            vmin=min(Temp_increase), vmax=max(Temp_increase)))
+    # if color_bar:
+    #     # Create a ScalarMappable object
+    #     sm = plt.cm.ScalarMappable(cmap=map_color, norm=plt.Normalize(
+    #         vmin=min(Temp_increase), vmax=max(Temp_increase)))
 
-        # Add color bar to the figure
-        plt.colorbar(sm, ax=axs, cmap=colors)
-    else:
-        handles, labels = axs[0].get_legend_handles_labels()
-        # box_psition = (0.96, 0.88)
-        legend = fig.legend(handles[:-1], labels, loc='outside upper center',
-                            bbox_to_anchor=box_psition_body,
-                            fancybox=True, shadow=False, ncol=1,
-                            title='Increase \n in $\degree C$',
-                            fontsize=FONTSIZE,
-                            title_fontsize=FONTSIZETITLE)
-        for lineleg in legend.legendHandles:
-            lineleg.set_linewidth(LegendWidth)
+    #     # Add color bar to the figure
+    #     plt.colorbar(sm, ax=axs, cmap=colors)
+    # else:
+    #     handles, labels = axs[0].get_legend_handles_labels()
+    #     # box_psition = (0.96, 0.88)
+    #     legend = fig.legend(handles[:-1], labels, loc='outside upper center',
+    #                         bbox_to_anchor=box_psition_body,
+    #                         fancybox=True, shadow=False, ncol=1,
+    #                         title='Increase \n in $\degree C$',
+    #                         fontsize=FONTSIZE,
+    #                         title_fontsize=FONTSIZETITLE)
+    #     for lineleg in legend.legendHandles:
+    #         lineleg.set_linewidth(LegendWidth)
+
+    handles, labels = axs[0].get_legend_handles_labels()
+
+    legend = fig.legend(handles, labels, loc='outside upper center',
+                        bbox_to_anchor=box_psition_body,
+                        fancybox=True, shadow=False, ncol=1,
+                        title='Increase \n in $\degree C$')
 
     # Adjust the spacing between subplots
-    plt.subplots_adjust(hspace=hspace, wspace=wspace)
-
+    # plt.subplots_adjust(hspace=hspace, wspace=wspace)
+    plt.tight_layout()
     if SAVE_PLOT:
         # Save plots
-        path = './New data/Images/Year v_1/'
+        # path = './New data/Images/Year v_1/'
         name = 'Full_model_temp_peaks_short_long_term_body'+FORMAT
         plt.savefig(path+name, dpi=RESOLUTION, bbox_inches='tight')
         print('Image Save as', name + FORMAT)
@@ -1650,8 +1658,8 @@ if plot_phosphorus_body:
     y_formatter.orderOfMagnitude = 4  # Set the exponent to 4
 
     # p_values = [0.01, 0.03, 0.05, 0.07]
-    p_values = [0.01, 0.03, 0.05, 0.07, 0.1, 0.2,
-                0.3, 0.4, 0.5, 0.6, 0.7]
+    p_values = [0.01, 0.03, 0.07, 0.1, 0.2,
+                0.3, 0.4, 0.5, 0.6, 0.7, P_0]
     # p_values = [0.1, 0.2, 0.3, 0.4]
     # p_values = [0.5, 0.6, 0.7, 0.8]
     colors = cm.GnBu(np.linspace(0.3, 1, len(p_values)))
@@ -1724,11 +1732,11 @@ if plot_phosphorus_body:
                 axs[i].set_ylabel(variables[i])
             color_index = p_values.index(p) % len(colors)
 
-            if p != 0.7:
+            if p != P_0:
                 line, = axs[i].plot(model_CyB.t, var, color=colors[color_index],
                                     label=f"{p} mgP/L")  # Collect lines for legend
 
-            elif p == 0.7:
+            elif p == P_0:
                 line, = axs[i].plot(model_CyB.t, var, color=BASE_COLORS,
                                     label=f"{p} mgP/L (base)")
 
@@ -1750,8 +1758,8 @@ if plot_phosphorus_body:
                 axs[i].xaxis.set_ticklabels(x_labels,
                                             rotation=30)
             axs[i].set_xlabel('')
-            axs[i].set_ylim(min_values[i], max_values[i]*(1+0.05))
-            axs[i].set_xlim(model_CyB.t.min(), model_CyB.t.max())
+            # axs[i].set_ylim(min_values[i], max_values[i]*(1+0.05))
+            # axs[i].set_xlim(model_CyB.t.min(), model_CyB.t.max())
             axs[i].yaxis.set_major_formatter(y_formatter)
             for spine in axs[i].spines.values():
                 spine.set_color('black')  # Set all spines color to black
@@ -1779,7 +1787,7 @@ if plot_phosphorus_body:
     plt.tight_layout()
     if SAVE_PLOT:
         # Save plots
-        path = './New data/Images/Year v_1/'
+        # path = './New data/Images/Year v_1/'
         name = 'Full_model_phosphorus_body'+FORMAT
         plt.savefig(path+name, dpi=RESOLUTION, bbox_inches='tight')
 
@@ -1902,8 +1910,8 @@ if plot_dE_body:
                 axs[i].xaxis.set_ticklabels(x_labels,
                                             rotation=30)
             axs[i].set_xlabel('')
-            axs[i].set_ylim(min_values[i], max_values[i]*(1+0.05))
-            axs[i].set_xlim(model_CyB.t.min(), model_CyB.t.max())
+            # axs[i].set_ylim(min_values[i], max_values[i]*(1+0.05))
+            # axs[i].set_xlim(model_CyB.t.min(), model_CyB.t.max())
             axs[i].yaxis.set_major_formatter(y_formatter)
             for spine in axs[i].spines.values():
                 spine.set_color('black')  # Set all spines color to black
@@ -1931,7 +1939,7 @@ if plot_dE_body:
     plt.tight_layout()
     if SAVE_PLOT:
         # Save plots
-        path = './New data/Images/Year v_1/'
+        # path = './New data/Images/Year v_1/'
         name = 'Full_model_dE_body'+FORMAT
         plt.savefig(path+name, dpi=RESOLUTION, bbox_inches='tight')
     # Show the plot
@@ -1947,7 +1955,8 @@ if plot_zm_body:
     y_formatter.orderOfMagnitude = 4  # Set the exponent to 4
 
     # p_values = [0.01, 0.03, 0.05, 0.07]
-    Z_values = list(np.arange(1, 10+1, 1))
+    Z_values = list(
+        np.append(np.round(np.arange(0.5, 3, 0.25), 2), 0))
     colors = cm.GnBu(np.linspace(0.3, 1, len(Z_values)))
 
     fig, axs = plt.subplots(1, 2, figsize=FigsizeSome)
@@ -1974,9 +1983,7 @@ if plot_zm_body:
 
     for z_m in Z_values:
 
-        model_CyB.params['z_mk_A'] = (z_m*0.0004)*1000
-        model_CyB.params['z_mk_B'] = (z_m*0.0004)*1000
-        model_CyB.params['z_mK_bg'] = (z_m*0.3)
+        model_CyB.auxZm = z_m
 
         # Different temperature
 
@@ -2025,11 +2032,11 @@ if plot_zm_body:
             axs[i].set_ylabel(variables[i])
             color_index = Z_values.index(z_m) % len(colors)
 
-            if z_m != 7:
+            if z_m != 0:
                 line, = axs[i].plot(model_CyB.t, var, color=colors[color_index],
                                     label=f"{z_m} m")
 
-            elif z_m == 7:
+            elif z_m == 0:
                 line, = axs[i].plot(model_CyB.t, var, color=BASE_COLORS,
                                     label=f"{z_m} m (base)")
 
@@ -2051,8 +2058,8 @@ if plot_zm_body:
                 axs[i].xaxis.set_ticklabels(x_labels,
                                             rotation=30)
             axs[i].set_xlabel('')
-            axs[i].set_ylim(min_values[i], max_values[i]*(1+0.05))
-            axs[i].set_xlim(model_CyB.t.min(), model_CyB.t.max())
+            # axs[i].set_ylim(min_values[i], max_values[i]*(1+0.05))
+            # axs[i].set_xlim(model_CyB.t.min(), model_CyB.t.max())
             axs[i].yaxis.set_major_formatter(y_formatter)
             for spine in axs[i].spines.values():
                 spine.set_color('black')  # Set all spines color to black
@@ -2072,14 +2079,14 @@ if plot_zm_body:
     legend = fig.legend(handles, labels, loc='outside upper center',
                         bbox_to_anchor=box_psition_zm_body,
                         fancybox=True, shadow=False, ncol=1,
-                        title='Depth of epilimnion')
+                        title='Increase \n depth of epilimnion')
     # plt.setp(legend.get_title(),  multialignment='left', rotation=90)
 
     # Adjust layout for better readability
     plt.tight_layout()
     if SAVE_PLOT:
         # Save plots
-        path = './New data/Images/Year v_1/'
+        # path = './New data/Images/Year v_1/'
         name = 'Full_model_zm_body'+FORMAT
         plt.savefig(path+name, dpi=RESOLUTION, bbox_inches='tight')
     # Show the plot
@@ -2165,8 +2172,8 @@ if plot_kbg_body:
 
             max_values[j] = max(max_values[j], var.max())
             min_values[j] = min(min_values[j], var.min())
-            axs[j].set_ylim(min_values[j], max_values[j]*(1+0.05))
-            axs[j].set_xlim(model_CyB.t.min(), model_CyB.t.max())
+            # axs[j].set_ylim(min_values[j], max_values[j]*(1+0.05))
+            # axs[j].set_xlim(model_CyB.t.min(), model_CyB.t.max())
             # axs[j].yaxis.set_major_formatter(y_formatter)
             x_ticks = axs[j].xaxis.get_ticklocs()
             if len(dates) > len(x_ticks):
@@ -2203,7 +2210,7 @@ if plot_kbg_body:
     if SAVE_PLOT:
         # Save plots
         # Save plots
-        path = './New data/Images/Year v_1/'
+        # path = './New data/Images/Year v_1/'
         name = 'Full_model_kbg_body'+FORMAT
         plt.savefig(path+name, dpi=RESOLUTION, bbox_inches='tight')
     plt.show()
@@ -2226,11 +2233,9 @@ if plot_temp_peak_fish:
     # Temp_increase = [0, 0.1, 0.2, 0.3,
     # 0.4, 0.6, 0.7, 0.8]
 
-    Temp_increase = [0, 0.4, 0.6, 0.7, 0.8, 1.0, 1.1, 1.4,
-                     1.7, 2.6, 3.4]
-
-    Temp_increase = np.round(np.arange(0, 3.4+0.2, 0.2), 1)
+    Temp_increase = np.append(np.round(np.arange(0.2, 3.4+0.2, 0.2), 1), 0)
     Temp_increase = list(Temp_increase)
+
     # colors = sns.color_palette(map_color, n_colors=len(Temp_increase))
     colors = cm.GnBu(np.linspace(0.3, 1, len(Temp_increase)))
     solution_Temp = {}
@@ -2242,39 +2247,39 @@ if plot_temp_peak_fish:
     min_values = [10, 10, 10, 10]
     for Temp in Temp_increase:
         model_CyB = read_params()
-        if Temp != 0:
-            # Data Temperature
-            days_temp = np.array(
-                [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334])
-            temp_water = np.array(
-                [7.35, 7.3, 7.91, 9.4, 11.67, 13.59, 15.49, 16.02, 14.08, 11.29, 9.26, 8.07])
+        # if Temp != 0:
+        #     # Data Temperature
+        #     days_temp = np.array(
+        #         [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334])
+        #     temp_water = np.array(
+        #         [7.35, 7.3, 7.91, 9.4, 11.67, 13.59, 15.49, 16.02, 14.08, 11.29, 9.26, 8.07])
 
-            delta_temp = Temp
+        #     delta_temp = Temp
 
-            for i in range(temp_water.shape[0]):
-                if temp_water[i] > 11:
-                    temp_water[i] = temp_water[i] + delta_temp
+        #     for i in range(temp_water.shape[0]):
+        #         if temp_water[i] > 11:
+        #             temp_water[i] = temp_water[i] + delta_temp
 
-            # Define the logistic function
-            def temperature(t, K, T, t_0, k_0):
-                return K*np.exp(-T*(t-t_0)**2)+k_0
+        #     # Define the logistic function
+        #     def temperature(t, K, T, t_0, k_0):
+        #         return K*np.exp(-T*(t-t_0)**2)+k_0
 
-            # Set bounds for positive values
-            bounds = ([0, 0, 0, 0], [np.inf, np.inf, np.inf, np.inf])
+        #     # Set bounds for positive values
+        #     bounds = ([0, 0, 0, 0], [np.inf, np.inf, np.inf, np.inf])
 
-            # Fit the logistic function to the data
-            initial_guess = [15, 0, 200, 7]
-            params, covariance = curve_fit(temperature,
-                                           days_temp,
-                                           temp_water,
-                                           p0=initial_guess,
-                                           bounds=bounds)
+        #     # Fit the logistic function to the data
+        #     initial_guess = [15, 0, 200, 7]
+        #     params, covariance = curve_fit(temperature,
+        #                                    days_temp,
+        #                                    temp_water,
+        #                                    p0=initial_guess,
+        #                                    bounds=bounds)
 
-            model_CyB.max_temp = round(params[0], 5)
-            model_CyB.min_temp = round(params[3], 5)
-            model_CyB.max_temp_time = round(params[2]-20, 5)
-            model_CyB.T = round(params[1], 5)
-
+        #     model_CyB.max_temp = round(params[0], 5)
+        #     model_CyB.min_temp = round(params[3], 5)
+        #     model_CyB.max_temp_time = round(params[2]-20, 5)
+        #     model_CyB.T = round(params[1], 5)
+        model_CyB.auxTemp = Temp
         # Different temperature
 
         # modelCyB.max_temp = 25.9
@@ -2345,8 +2350,8 @@ if plot_temp_peak_fish:
             max_values[i] = max(max_values[i], var.max())
             min_values[i] = min(min_values[i], var.min())
 
-            axs[i].set_ylim(min_values[i], max_values[i] * (1+0.05))
-            axs[i].set_xlim(model_CyB.t.min(), model_CyB.t.max())
+            # axs[i].set_ylim(min_values[i], max_values[i] * (1+0.05))
+            # axs[i].set_xlim(model_CyB.t.min(), model_CyB.t.max())
             axs[i].yaxis.set_major_formatter(y_formatter)
             for spine in axs[i].spines.values():
                 spine.set_color('black')  # Set all spines color to black
@@ -2376,9 +2381,10 @@ if plot_temp_peak_fish:
                             fancybox=True, shadow=False, ncol=1,
                             title='Increased Temp')
 
+    plt.tight_layout()
     if SAVE_PLOT:
         # Save plots
-        path = './New data/Images/Year v_1/'
+        # path = './New data/Images/Year v_1/'
         name = 'Full_model_temp_peaks_short_long_term_fish'+FORMAT
         plt.savefig(path+name, dpi=RESOLUTION, bbox_inches='tight')
     # Show the plot
@@ -2394,8 +2400,8 @@ if plot_phosphorus_fish:
     y_formatter.orderOfMagnitude = 4  # Set the exponent to 4
 
     # p_values = [0.01, 0.03, 0.05, 0.07]
-    p_values = [0.01, 0.03, 0.05, 0.07, 0.1, 0.2,
-                0.3, 0.4, 0.5, 0.6, 0.7]
+    p_values = [0.01, 0.03, 0.07, 0.1, 0.2,
+                0.3, 0.4, 0.5, 0.6, 0.7, P_0]
     # p_values = [0.1, 0.2, 0.3, 0.4]
     # p_values = [0.5, 0.6, 0.7, 0.8]
     colors = cm.GnBu(np.linspace(0.3, 1, len(p_values)))
@@ -2468,11 +2474,11 @@ if plot_phosphorus_fish:
                 axs[i].set_ylabel(variables[i])
             color_index = p_values.index(p) % len(colors)
 
-            if p != 0.7:
+            if p != P_0:
                 line, = axs[i].plot(model_CyB.t, var, color=colors[color_index],
                                     label=f"{p} mgP/L")  # Collect lines for legend
 
-            elif p == 0.7:
+            elif p == P_0:
                 line, = axs[i].plot(model_CyB.t, var, color=BASE_COLORS,
                                     label=f"{p} mgP/L (base)")
 
@@ -2494,8 +2500,8 @@ if plot_phosphorus_fish:
                 axs[i].xaxis.set_ticklabels(x_labels,
                                             rotation=30)
             axs[i].set_xlabel('')
-            axs[i].set_ylim(min_values[i], max_values[i]*(1+0.05))
-            axs[i].set_xlim(model_CyB.t.min(), model_CyB.t.max())
+            # axs[i].set_ylim(min_values[i], max_values[i]*(1+0.05))
+            # axs[i].set_xlim(model_CyB.t.min(), model_CyB.t.max())
             axs[i].yaxis.set_major_formatter(y_formatter)
             for spine in axs[i].spines.values():
                 spine.set_color('black')  # Set all spines color to black
@@ -2523,7 +2529,7 @@ if plot_phosphorus_fish:
     plt.tight_layout()
     if SAVE_PLOT:
         # Save plots
-        path = './New data/Images/Year v_1/'
+        # path = './New data/Images/Year v_1/'
         name = 'Full_model_phosphorus_fish'+FORMAT
         plt.savefig(path+name, dpi=RESOLUTION, bbox_inches='tight')
 
@@ -2646,8 +2652,8 @@ if plot_dE_fish:
                 axs[i].xaxis.set_ticklabels(x_labels,
                                             rotation=30)
             axs[i].set_xlabel('')
-            axs[i].set_ylim(min_values[i], max_values[i]*(1+0.05))
-            axs[i].set_xlim(model_CyB.t.min(), model_CyB.t.max())
+            # axs[i].set_ylim(min_values[i], max_values[i]*(1+0.05))
+            # axs[i].set_xlim(model_CyB.t.min(), model_CyB.t.max())
             axs[i].yaxis.set_major_formatter(y_formatter)
             for spine in axs[i].spines.values():
                 spine.set_color('black')  # Set all spines color to black
@@ -2675,7 +2681,7 @@ if plot_dE_fish:
     plt.tight_layout()
     if SAVE_PLOT:
         # Save plots
-        path = './New data/Images/Year v_1/'
+        # path = './New data/Images/Year v_1/'
         name = 'Full_model_dE_fish'+FORMAT
         plt.savefig(path+name, dpi=RESOLUTION, bbox_inches='tight')
     # Show the plot
@@ -2691,7 +2697,8 @@ if plot_zm_fish:
     y_formatter.orderOfMagnitude = 4  # Set the exponent to 4
 
     # p_values = [0.01, 0.03, 0.05, 0.07]
-    Z_values = list(np.arange(1, 10+1, 1))
+    Z_values = list(
+        np.append(np.round(np.arange(0.5, 3, 0.25), 2), 0))
     colors = cm.GnBu(np.linspace(0.3, 1, len(Z_values)))
 
     fig, axs = plt.subplots(1, 2, figsize=FigsizeSome)
@@ -2718,9 +2725,7 @@ if plot_zm_fish:
 
     for z_m in Z_values:
 
-        model_CyB.params['z_mk_A'] = (z_m*0.0004)*1000
-        model_CyB.params['z_mk_B'] = (z_m*0.0004)*1000
-        model_CyB.params['z_mK_bg'] = (z_m*0.3)
+        model_CyB.auxZm = z_m
 
         # Different temperature
 
@@ -2769,11 +2774,11 @@ if plot_zm_fish:
             axs[i].set_ylabel(variables[i])
             color_index = Z_values.index(z_m) % len(colors)
 
-            if z_m != 7:
+            if z_m != 0:
                 line, = axs[i].plot(model_CyB.t, var, color=colors[color_index],
                                     label=f"{z_m} m")
 
-            elif z_m == 7:
+            elif z_m == 0:
                 line, = axs[i].plot(model_CyB.t, var, color=BASE_COLORS,
                                     label=f"{z_m} m (base)")
 
@@ -2795,8 +2800,8 @@ if plot_zm_fish:
                 axs[i].xaxis.set_ticklabels(x_labels,
                                             rotation=30)
             axs[i].set_xlabel('')
-            axs[i].set_ylim(min_values[i], max_values[i]*(1+0.05))
-            axs[i].set_xlim(model_CyB.t.min(), model_CyB.t.max())
+            # axs[i].set_ylim(min_values[i], max_values[i]*(1+0.05))
+            # axs[i].set_xlim(model_CyB.t.min(), model_CyB.t.max())
             axs[i].yaxis.set_major_formatter(y_formatter)
             for spine in axs[i].spines.values():
                 spine.set_color('black')  # Set all spines color to black
@@ -2816,14 +2821,14 @@ if plot_zm_fish:
     legend = fig.legend(handles, labels, loc='outside upper center',
                         bbox_to_anchor=box_psition_zm_fish,
                         fancybox=True, shadow=False, ncol=1,
-                        title='Depth of epilimnion')
+                        title='Increase \n depth of epilimnion')
     # plt.setp(legend.get_title(),  multialignment='left', rotation=90)
 
     # Adjust layout for better readability
     plt.tight_layout()
     if SAVE_PLOT:
         # Save plots
-        path = './New data/Images/Year v_1/'
+        # path = './New data/Images/Year v_1/'
         name = 'Full_model_zm_fish'+FORMAT
         plt.savefig(path+name, dpi=RESOLUTION, bbox_inches='tight')
     # Show the plot
@@ -2854,7 +2859,7 @@ if plot_kbg_fish:
     max_values = [0, 0, 0, 0]
     min_values = [10, 10, 10, 10]
     for i, b in enumerate(zmKb_values):
-        model_CyB.params['z_mK_bg'] = 7*b
+        model_CyB.params['z_mK_bg'] = b
 
         # modelCyB.max_temp = 25.9
         solution, info = model_CyB.solver()
@@ -2909,8 +2914,8 @@ if plot_kbg_fish:
 
             max_values[j] = max(max_values[j], var.max())
             min_values[j] = min(min_values[j], var.min())
-            axs[j].set_ylim(min_values[j], max_values[j]*(1+0.05))
-            axs[j].set_xlim(model_CyB.t.min(), model_CyB.t.max())
+            # axs[j].set_ylim(min_values[j], max_values[j]*(1+0.05))
+            # axs[j].set_xlim(model_CyB.t.min(), model_CyB.t.max())
             # axs[j].yaxis.set_major_formatter(y_formatter)
             x_ticks = axs[j].xaxis.get_ticklocs()
             if len(dates) > len(x_ticks):
@@ -2947,7 +2952,7 @@ if plot_kbg_fish:
     if SAVE_PLOT:
         # Save plots
         # Save plots
-        path = './New data/Images/Year v_1/'
+        # path = './New data/Images/Year v_1/'
         name = 'Full_model_kbg_fish'+FORMAT
         plt.savefig(path+name, dpi=RESOLUTION, bbox_inches='tight')
     plt.show()
@@ -3329,7 +3334,7 @@ if HeatMapPhosTemp:
                                 rotation=0)
 
     # Save plots
-    path = './New data/Images/Year v_1/'
+    # path = './New data/Images/Year v_1/'
     name = 'Full_model_heat_MaxM_pho_max'+FORMAT
     plt.savefig(path+name, dpi=1000, bbox_inches='tight')
 
@@ -3369,7 +3374,7 @@ if HeatMapPhosTemp:
                                 rotation=0)
 
     # Save plots
-    path = './New data/Images/Year v_1/'
+    # path = './New data/Images/Year v_1/'
     name = 'Full_model_heat_MaxM_pho_aver'+FORMAT
     plt.savefig(path+name, dpi=RESOLUTION, bbox_inches='tight')
     # Show the plot
@@ -3438,7 +3443,7 @@ if HeatMapPlot:
         ax.yaxis.set_ticklabels(y_labels,
                                 rotation=0)
     # Save plots
-    path = './New data/Images/Year v_1/'
+    # path = './New data/Images/Year v_1/'
     name = 'Full_model_heat_MaxCyB'+FORMAT
     plt.savefig(path+name, dpi=1000, bbox_inches='tight')
     # Show the plot
@@ -3475,7 +3480,7 @@ if HeatMapPlot:
 
     # Show the plot
     # Save plots
-    path = './New data/Images/Year v_1/'
+    # path = './New data/Images/Year v_1/'
     name = 'Full_model_heat_MeanCyB'+FORMAT
     plt.savefig(path+name, dpi=RESOLUTION, bbox_inches='tight')
     plt.show()

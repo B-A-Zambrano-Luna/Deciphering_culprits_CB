@@ -17,7 +17,7 @@ A_0 = 0.05
 B_0 = 0.004  # 0.004
 Q_B_0 = 0.01
 Q_A_0 = 0.01
-P_0 = 0.06  # 10
+P_0 = 0.05  # 10
 D_0 = 0.0239  # 0.0239
 Y_0 = 0.025*10
 W_0 = 0.0025*10
@@ -52,7 +52,7 @@ labels = ['MICROCYSTIN, TOTAL',
 #           'TEMPERATURE WATER']
 # years = ['2018', '2019', '2020', '2021', '2022', '2023']
 years = ['2021']  # ['2019']  # ['2021']
-coment = "_v5_3Var_"  # "_v4_3Var_"  # "_v4_"
+coment = "_v6_3Var_"  # "_v4_3Var_"  # "_v4_"
 
 data_fit = extractData(data, years, labels, lake_name)
 
@@ -73,10 +73,9 @@ def read_params():
     #     "fitting_parameters_full_variables_v12021Pine Lake_v2__final.csv")
     unknow_params = ["alpha_D", "alpha_Y",
                      "tau_D", "tau_Y",
-                     "a_A", "a_D",
+                     "a_A",
                      "sigma_A", "sigma_D",
-                     "x_A", "x_D",
-                     "n_D"]
+                     "x_A"]
 
     model_CyB.initial[1] = params_fit["B_0"][0]
     model_CyB.initial[2] = params_fit["A_0"][0]
@@ -162,13 +161,9 @@ M_values, B_values, A_values, \
     v_W_values, O_values = solution.T
 
 
-# Persentanges
-
-# M_max = M_values.max()
-# B_max = B_values.max()
-# v_Y_max = v_Y_values.max()
-# v_W_max = v_W_values.max()
-# O_min = O_values[40*3:].min()
+SaveFigures = True
+path = "./Figures/"
+RESOLUTION = 600
 
 
 def generate_dates(year):
@@ -202,18 +197,23 @@ for label in labels:
         250/255, 134/255, 0/255), label="Observed Data")
 
     if label == 'MICROCYSTIN, TOTAL':
+        name = 'MICROCYSTIN'
         ylabel = "M $[\mu g/L]$ "
         y_values = M_values
     elif label == 'PHOSPHORUS TOTAL DISSOLVED':
+        name = 'PHOSPHORUS'
         ylabel = "P $[mg P/L]$ "
         y_values = P_values
     elif label == 'OXYGEN DISSOLVED (FIELD METER)':
+        name = 'OXYGEN'
         ylabel = "O $[mg O/L]$ "
         y_values = O_values
     elif label == 'Total cyanobacterial cell count (cells/mL)':
+        name = 'CB'
         ylabel = "B $[mg C/L]$ "
         y_values = B_values
     elif label == 'TEMPERATURE WATER':
+        name = 'TEMPERATURE WATER'
         ylabel = "T $[C^{\circ}]$ "
         y_values = model_CyB.Temp(model_CyB.t)
 
@@ -233,7 +233,7 @@ for label in labels:
     axs.tick_params(axis='both', which='both', bottom=True, top=True,
                     left=True, right=True, direction='in', length=4, width=1, colors='black')
 
-    # axs.set_ylim(B_values.min()-0.001, B_values.max()*(1+0.05))
+    # axs.set_ylim(y_values.min()-0.001, y_values.max()*(1+0.05))
     # axs.set_xlim(model_CyB.t.min(), model_CyB.t.max())
 
     # Dates as x axis
@@ -252,6 +252,8 @@ for label in labels:
 
     # plt.legend()
     plt.tight_layout()
+    if SaveFigures:
+        plt.savefig(path + name + ".pdf", dpi=RESOLUTION, bbox_inches='tight')
 
 # Other variables Zm
 sns.set_style('ticks')
@@ -267,7 +269,7 @@ axs.plot(model_CyB.t, y_values, color=(19/255, 103/255, 131/255))
 
 # plt.xlabel("Time (days)")
 plt.xlabel("")
-plt.ylabel("Zm $[m]")
+plt.ylabel("Epilimnion $[m]")
 plt.title('')
 y_formatter = ScalarFormatter(useMathText=True, useOffset=False)
 y_formatter.set_powerlimits((-3, 4))
@@ -279,8 +281,8 @@ for spine in axs.spines.values():
 axs.tick_params(axis='both', which='both', bottom=True, top=True,
                 left=True, right=True, direction='in', length=4, width=1, colors='black')
 
-# axs.set_ylim(B_values.min()-0.001, B_values.max()*(1+0.05))
-# axs.set_xlim(model_CyB.t.min(), model_CyB.t.max())
+axs.set_ylim(y_values.min()-0.001, y_values.max()*(1+0.05))
+axs.set_xlim(model_CyB.t.min(), model_CyB.t.max())
 
 # Dates as x axis
 dates = generate_dates(2023)
@@ -298,7 +300,9 @@ else:
 
 # plt.legend()
 plt.tight_layout()
-
+if SaveFigures:
+    plt.savefig(path + 'Epilimnion' + ".pdf",
+                dpi=RESOLUTION, bbox_inches='tight')
 
 # Daphnia
 
@@ -315,7 +319,7 @@ axs.plot(model_CyB.t, y_values, color=(19/255, 103/255, 131/255))
 
 # plt.xlabel("Time (days)")
 plt.xlabel("")
-plt.ylabel("Daphnia")
+plt.ylabel("Daphnia [mgC/L]")
 plt.title('')
 y_formatter = ScalarFormatter(useMathText=True, useOffset=False)
 y_formatter.set_powerlimits((-3, 4))
@@ -327,7 +331,7 @@ for spine in axs.spines.values():
 axs.tick_params(axis='both', which='both', bottom=True, top=True,
                 left=True, right=True, direction='in', length=4, width=1, colors='black')
 
-# axs.set_ylim(B_values.min()-0.001, B_values.max()*(1+0.05))
+# axs.set_ylim(y_values.min()-0.001, y_values.max()*(1+0.05))
 # axs.set_xlim(model_CyB.t.min(), model_CyB.t.max())
 
 # Dates as x axis
@@ -346,6 +350,8 @@ else:
 
 # plt.legend()
 plt.tight_layout()
+if SaveFigures:
+    plt.savefig(path + 'Daphnia' + ".pdf", dpi=RESOLUTION, bbox_inches='tight')
 
 # Algae
 
@@ -362,7 +368,7 @@ axs.plot(model_CyB.t, y_values, color=(19/255, 103/255, 131/255))
 
 # plt.xlabel("Time (days)")
 plt.xlabel("")
-plt.ylabel("Algea")
+plt.ylabel("Algea [mg C/L]")
 plt.title('')
 y_formatter = ScalarFormatter(useMathText=True, useOffset=False)
 y_formatter.set_powerlimits((-3, 4))
@@ -374,7 +380,7 @@ for spine in axs.spines.values():
 axs.tick_params(axis='both', which='both', bottom=True, top=True,
                 left=True, right=True, direction='in', length=4, width=1, colors='black')
 
-# axs.set_ylim(B_values.min()-0.001, B_values.max()*(1+0.05))
+# axs.set_ylim(y_values.min()-0.001, y_values.max()*(1+0.05))
 # axs.set_xlim(model_CyB.t.min(), model_CyB.t.max())
 
 # Dates as x axis
@@ -393,7 +399,8 @@ else:
 
 # plt.legend()
 plt.tight_layout()
-
+if SaveFigures:
+    plt.savefig(path + 'Algea' + ".pdf", dpi=RESOLUTION, bbox_inches='tight')
 
 # Yellow Perch
 
@@ -410,7 +417,7 @@ axs.plot(model_CyB.t, y_values, color=(19/255, 103/255, 131/255))
 
 # plt.xlabel("Time (days)")
 plt.xlabel("")
-plt.ylabel("Yellow Perch")
+plt.ylabel("Yellow Perch [mg C/L]")
 plt.title('')
 y_formatter = ScalarFormatter(useMathText=True, useOffset=False)
 y_formatter.set_powerlimits((-3, 4))
@@ -422,7 +429,7 @@ for spine in axs.spines.values():
 axs.tick_params(axis='both', which='both', bottom=True, top=True,
                 left=True, right=True, direction='in', length=4, width=1, colors='black')
 
-# axs.set_ylim(B_values.min()-0.001, B_values.max()*(1+0.05))
+# axs.set_ylim(y_values.min()-0.001, y_values.max()*(1+0.05))
 # axs.set_xlim(model_CyB.t.min(), model_CyB.t.max())
 
 # Dates as x axis
@@ -441,6 +448,9 @@ else:
 
 # plt.legend()
 plt.tight_layout()
+if SaveFigures:
+    plt.savefig(path + 'YellowPerch' + ".pdf",
+                dpi=RESOLUTION, bbox_inches='tight')
 
 # Walleye
 
@@ -457,7 +467,7 @@ axs.plot(model_CyB.t, y_values, color=(19/255, 103/255, 131/255))
 
 # plt.xlabel("Time (days)")
 plt.xlabel("")
-plt.ylabel("Walleye")
+plt.ylabel("Walleye [mg C/L]")
 plt.title('')
 y_formatter = ScalarFormatter(useMathText=True, useOffset=False)
 y_formatter.set_powerlimits((-3, 4))
@@ -469,7 +479,7 @@ for spine in axs.spines.values():
 axs.tick_params(axis='both', which='both', bottom=True, top=True,
                 left=True, right=True, direction='in', length=4, width=1, colors='black')
 
-# axs.set_ylim(B_values.min()-0.001, B_values.max()*(1+0.05))
+# axs.set_ylim(y_values.min()-0.001, y_values.max()*(1+0.05))
 # axs.set_xlim(model_CyB.t.min(), model_CyB.t.max())
 
 # Dates as x axis
@@ -488,6 +498,8 @@ else:
 
 # plt.legend()
 plt.tight_layout()
+if SaveFigures:
+    plt.savefig(path + 'WallEye' + ".pdf", dpi=RESOLUTION, bbox_inches='tight')
 
 # Save plots
 # path = './New data/Images/Year v_1/'

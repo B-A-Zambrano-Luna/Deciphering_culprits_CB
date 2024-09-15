@@ -44,7 +44,7 @@ params = {
     'mu_r_A': 0.05,
     'v': 0.25,
     'd_E': 0.02,
-    'p_in': 0.15,
+    'p_in': 0.03,
     'e_BD': 0.8,
     'e_AD': 0.8,
     'phi': 700,
@@ -55,7 +55,7 @@ params = {
     'tau_B': 1.23,
     'tau_A': 1.23,
     'theta_D': 0.03,
-    'n_D': 0,
+    'n_D': 1/365,
     'theta_Y': 0.064,
     'theta_W': 0.061,
     'e_DY': 0.667,
@@ -68,10 +68,10 @@ params = {
     'n_W': 0.00104,
     "n_A": 0.39,
     "n_B": 0.39,
-    'p': 0.9,  # 100/14.12376,  # mug/mgC
+    'p': 1.11/14.12376,  # mug/mgC  # 100/14.12376,  # mug/mgC
     'd_M': 0.02,
     "x_A": 0,
-    "x_D": 0,
+    "x_D": 0.0021,
     "x_Y": 0.00398,
     "x_W": 0.00398,
     "sigma_A": 0,
@@ -79,7 +79,7 @@ params = {
     "sigma_Y": 0.0062,
     "sigma_W": 0.0062,
     "a_A": 0,
-    "a_D": 0,
+    "a_D": 0.55,
     "a_Y": 0.1733*(10**(-6)),
     "a_W": 0.1733*(10**(-6)),
     "T_min_B": 5,
@@ -266,6 +266,8 @@ class modelCyB(object):
         self.T = 0.0005196470766
         self.labels = False
         self.interpTemp = None
+        self.auxZm = 0
+        self.auxTemp = 0
 
     def set_linetime(self):
         self.t = np.linspace(self.t_0, self.t_f, self.delta_t)
@@ -287,7 +289,7 @@ class modelCyB(object):
             days, Zmsample)
 
     def Zm(self, t):
-        return self.interpZm(t)
+        return self.interpZm(t) + self.auxZm
         # if self.interpZm(t) < 3:
         #     return 3
         # else:
@@ -295,7 +297,7 @@ class modelCyB(object):
 
     def Temp(self, t, data=None):
         # print('Temp:', self.interpTemp(t), t)
-        return self.interpTemp(t)
+        return self.interpTemp(t) + self.auxTemp
 
     def system(self, y, t):
         self.params['z_m'] = self.Zm(t)
