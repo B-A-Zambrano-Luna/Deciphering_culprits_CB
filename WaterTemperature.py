@@ -124,16 +124,22 @@ class WaterTemperature(object):
 
 lakeboundary = {'PIGEON LAKE': './BoundaryLake/PigeonLake/pige_bdy_py_tm.shp',
                 'CHESTERMERE LAKE': './BoundaryLake/ChestermereLake/ches_bdy_py_tm.shp',
-                'MINNIE LAKE': './BoundaryLake/MinnieLake/minn_bdy_py_tm.shp'}
+                'MINNIE LAKE': './BoundaryLake/MinnieLake/minn_bdy_py_tm.shp',
+                'MENDOTA LAKE': './BoundaryLake/MendotaLake/Mendota Lake in Wisconsin.shp'}
 
-# path = './DIG_2008_0828/'
-# name = 'pige_bdy_py_tm.shp'
-
-years = ['2019', '2020', '2021', '2022', '2023']
+year = '2018'
+lake = 'MENDOTA LAKE'
 pathData = "./ERA5-Land/"
-for lake in lakeboundary:
-    watertemperature = WaterTemperature()
-    watertemperature.roi = geemap.shp_to_ee(lakeboundary[lake])
-    for year in years:
-        df = watertemperature.getWaterTempDates(year+"-05-01", year+"-09-30")
-        df.to_csv(pathData+year+lake+"WaterTemperature.csv")
+watertemperature = WaterTemperature()
+watertemperature.roi = geemap.shp_to_ee(lakeboundary[lake])
+df = watertemperature.getWaterTempDates(year+"-05-01", year+"-09-30")
+df.to_csv(pathData+year+lake+"WaterTemperature.csv")
+
+# years = ['2019', '2020', '2021', '2022', '2023']
+# pathData = "./ERA5-Land/"
+# for lake in lakeboundary:
+#     watertemperature = WaterTemperature()
+#     watertemperature.roi = geemap.shp_to_ee(lakeboundary[lake])
+#     for year in years:
+#         df = watertemperature.getWaterTempDates(year+"-05-01", year+"-09-30")
+#         df.to_csv(pathData+year+lake+"WaterTemperature.csv")

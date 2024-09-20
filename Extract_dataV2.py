@@ -7,14 +7,10 @@ Emptyvalue = -999
 
 
 def Microcystin_change(value):
-    if value == "No data":
-        return 0
-    elif value == "<0.05":
-        return 0.05
-    elif value == "<0.10":
-        return 0.10
+    if np.isnan(value):
+        return Emptyvalue
     else:
-        return value
+        return value * 0.9952  # 1nMol/L = 0.9952 mu g/L
 
 
 def Total_CyB(value):
@@ -42,6 +38,9 @@ def transform(value, label):
 
     elif np.isnan(value):
         return Emptyvalue
+
+    elif label == 'Microcystin (nM)':
+        return value * 0.9952  # 1nMol/L = 0.9952 mu g/L
 
     else:
         return value
