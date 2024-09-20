@@ -47,10 +47,10 @@ data = pd.read_csv(
 
 lake_name = "PIGEON LAKE"
 
-labels = ['MICROCYSTIN, TOTAL',
-          'PHOSPHORUS TOTAL DISSOLVED',
-          'OXYGEN DISSOLVED (FIELD METER)',
-          'Total cyanobacterial cell count (cells/mL)']
+# labels = ['MICROCYSTIN, TOTAL',
+#           'PHOSPHORUS TOTAL DISSOLVED',
+#           'OXYGEN DISSOLVED (FIELD METER)',
+#           'Total cyanobacterial cell count (cells/mL)']
 
 labels = ['MICROCYSTIN, TOTAL',
           'OXYGEN DISSOLVED (FIELD METER)',
@@ -58,9 +58,12 @@ labels = ['MICROCYSTIN, TOTAL',
 
 
 years = ['2018', '2019', '2020', '2021', '2022', '2023']
-years = ['2021']
-# coment = "_v3_" + labels[-1][:13]
-coment = "_v6_3Var_"
+years = ['2022']
+yearname = ''
+for year in years:
+    yearname = yearname + str(year) + '_'
+
+coment = "_v6_3Var_"+yearname
 data_fit = extractData(data, years, labels, lake_name)
 
 data = None
