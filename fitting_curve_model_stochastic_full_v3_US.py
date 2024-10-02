@@ -42,21 +42,30 @@ model_CyB.toxines = True
 # Define the model function to pass to curve_fit
 
 # Data
-data = pd.read_csv(
-    "Dataset_US.csv", low_memory=False)
 
 lake_name = "MENDOTA LAKE"
 
 
-labels = ['Microcystin (nM)',
-          'OXYGEN DISSOLVED (FIELD METER)',
-          'Total cyanobacterial cell count (cells/mL)']
-
-
-years = ['2018']
+years = ['2013']
 yearname = ''
 for year in years:
     yearname = yearname + str(year) + '_'
+
+if years[-1] == '2018':
+    data = pd.read_csv(
+        "Dataset_US.csv", low_memory=False)
+
+    labels = ['Microcystin (nM)',
+              'OXYGEN DISSOLVED (FIELD METER)',
+              'Total cyanobacterial cell count (cells/mL)']
+else:
+
+    data = pd.read_csv(
+        "Combined_Data_for_MO_Merged.csv", low_memory=False)
+
+    labels = ['OXYGEN DISSOLVED (FIELD METER)',
+              'Total cyanobacterial cell count (cells/mL)']
+
 
 coment = "_v6_3Var_"+yearname
 data_fit = extractData(data, years, labels, lake_name)
@@ -209,7 +218,7 @@ def sumOfSquaredError(parameterTuple, *args):
         for day in dayslabel:
             dataday = data_fit[label][day]
             dataday = dataday[dataday != -999]
-            if len(dataday) != 0 and day < days_end:
+            if len(dataday) != 0 and day <= days_end and day >= day_start:
                 samples += 1
                 # print(dataday, label, ModelOutput[int((day - day_start)*3)])
                 ans1 += ((dataday -

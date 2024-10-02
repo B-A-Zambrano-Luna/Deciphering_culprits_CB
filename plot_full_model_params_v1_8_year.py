@@ -42,17 +42,38 @@ initial_conditions = [M_0, B_0, A_0,
 # Data
 data = pd.read_csv(
     "merged_water_quality_data.csv", low_memory=False)
-lake_name = "PIGEON LAKE"  # "MINNIE LAKE"  # "PIGEON LAKE"
+
+
+# data = pd.read_csv(
+#     "Dataset_US.csv", low_memory=False)
+
+
+#  # "PINE LAKE"  # "PIGEON LAKE" # MENDOTA LAKE
+lake_name = "PIGEON LAKE"
+
+
 labels = ['MICROCYSTIN, TOTAL',
           'PHOSPHORUS TOTAL DISSOLVED',
           'OXYGEN DISSOLVED (FIELD METER)',
           'Total cyanobacterial cell count (cells/mL)',
           'TEMPERATURE WATER']
-# labels = ['Total cyanobacterial cell count (cells/mL)',
-#           'TEMPERATURE WATER']
+
+# labels = ['Microcystin (nM)',
+#           'OXYGEN DISSOLVED (FIELD METER)',
+#           'Total cyanobacterial cell count (cells/mL)']
+
+
 # years = ['2018', '2019', '2020', '2021', '2022', '2023']
-years = ['2021']  # ['2019']  # ['2021']
-coment = "_v6_3Var_"  # "_v4_3Var_"  # "_v4_"
+years = ['2021']  # ['2017']  # ['2019']  # ['2021']
+
+yearname = ''
+for year in years:
+    yearname = yearname + str(year) + '_'
+
+if lake_name == 'PIGEON LAKE' and years[-1] == '2021':
+    coment = "_v6_3Var_"
+else:
+    coment = "_v6_3Var_" + yearname
 
 data_fit = extractData(data, years, labels, lake_name)
 
@@ -62,7 +83,6 @@ data_fit = extractData(data, years, labels, lake_name)
 def read_params():
     model_CyB = fullmodel_v1_8.modelCyB()
     model_CyB.initial = initial_conditions
-    name_data_param = "fitting_parameters_full_variables_v1"
     name_data = './FittedParameters/' + \
         'fitting_parameters_full_variables_v2'+lake_name + coment + '_final' + ".csv"
     # name_data = './FittedParameters/' + \
@@ -128,17 +148,6 @@ fill = False
 
 solution, info = model_CyB.solver()
 
-# path = './New data/Images/Year v_1/'
-name = 'Full_model'+".pdf"
-
-# model_CyB.print_solv(title='', all_plot=True,
-#                      save=False,
-#                      save_path=path+name,
-#                      dpi=RESOLUTION)
-
-
-# y_data = data_fit["Total cyanobacterial cell count (cells/mL)Tra"].values
-
 
 M_values, B_values, A_values, \
     Q_B_values, Q_A_values, P_values, \
@@ -148,12 +157,6 @@ M_values, B_values, A_values, \
 
 
 # Persentanges
-
-# M_max = M_values.max()
-# B_max = B_values.max()
-# v_Y_max = v_Y_values.max()
-# v_W_max = v_W_values.max()
-# O_min = O_values[40*3:].min()
 
 
 def generate_dates(year):
@@ -171,64 +174,13 @@ def generate_dates(year):
     return dates
 
 
-# # Plot fitting data
-# sns.set_style('ticks')
-# sns.plotting_context("paper", font_scale=1.5)  # Adjust font size as needed
-# fig, axs = plt.subplots(1, 1, figsize=(11 / 2.54, 11 / 2.54))
-# # axs = axs.ravel()
-# axs.scatter(t_data, y_data, color=(
-#     250/255, 134/255, 0/255), label="Observed Data")
-# axs.plot(model_CyB.t, B_values, color=(19/255, 103/255, 131/255))
-
-# # plt.xlabel("Time (days)")
-# plt.xlabel("")
-# plt.ylabel("B $[mgC/L]$ ")
-# plt.title('')
-# y_formatter = ScalarFormatter(useMathText=True, useOffset=False)
-# y_formatter.set_powerlimits((-3, 4))
-# y_formatter.orderOfMagnitude = 4
-# axs.yaxis.set_major_formatter(y_formatter)
-
-# for spine in axs.spines.values():
-#     spine.set_color('black')
-# axs.tick_params(axis='both', which='both', bottom=True, top=True,
-#                 left=True, right=True, direction='in', length=4, width=1, colors='black')
-
-# axs.set_ylim(B_values.min()-0.001, B_values.max()*(1+0.05))
-# axs.set_xlim(model_CyB.t.min(), model_CyB.t.max())
-
-# # Dates as x axis
-# dates = generate_dates(2021)
-# x_ticks = axs.xaxis.get_ticklocs()
-
-
-# if len(dates) > len(x_ticks):
-#     x_stape = round(len(dates) / len(x_ticks), 0)
-#     x_labels = [dates[int(x_val)] for x_val in x_ticks[:-1]]
-#     axs.xaxis.set_ticklabels(x_labels,
-#                              rotation=30)
-# else:
-#     x_labels = dates
-#     axs.xaxis.set_ticklabels(x_labels,
-#                              rotation=30)
-
-# # plt.legend()
-# plt.tight_layout()
-
-# Save plots
-# path = './New data/Images/Year v_1/'
-# name = 'Full_model_fit'+FORMAT
-# plt.savefig(path+name, dpi=RESOLUTION, bbox_inches='tight')
-
-# plt.show()
-
-# print("MSE", np.mean(
-#     (y_data-B_values[(t_data-t_data.min())*3])**2)/t_data.shape[0])
-
 print("Model_v1", info["message"])
 
 
 ####### Plots ###############
+
+def extract_value(label):
+    return float(label.split()[0])
 
 
 threhold = 0
@@ -240,6 +192,7 @@ map_color = "inferno"
 map_color = 'cool'
 color_bar = False
 WithTitle = False
+
 # sns.set_style("dark")
 # sns.set_style('darkgrid')
 sns.set_style('ticks')
@@ -249,7 +202,7 @@ LINE_COLOR = '#F0A145'  # '#B7770E'  # '#E1A332'
 SAVE_PLOT = True
 Print_Values = False
 dates = generate_dates(2023)
-path = './Figures/Variations/'
+path = './Figures/Variations/' + lake_name + '/' + yearname
 
 ############### Dimensions ######################
 FigsizeAll = (11 / 2.54, 11 / 2.54)
@@ -269,50 +222,49 @@ other_tick_len = 2  # Length for other ticks
 hspace = 0.35
 wspace = 0.6
 FONTSIZETITLE = 8
-linewidth = 0.5
 LegendWidth = 2
-
+LINEWIDTH = 0.75
 # Which Plot
-plot_zmKb = False
-box_psition_zmKb = (1.05, 0.98)
-plot_z_m = False
+plot_zmKb = True  # Using
+box_psition_zmKb = (1.065, 0.98)
+plot_z_m = True  # Using
 box_psition_z_m = (1.095, 0.98)
-plot_d_E = False
-box_psition_d_E = (1.095, 0.99)
-plot_phos = False
-box_psition_phos = (1.095, 0.99)
+plot_d_E = True  # Using
+box_psition_d_E = (1.115, 0.98)
+plot_phos = True  # Using
+box_psition_phos = (1.115, 0.98)
 # Different Temperatures peaks
-plot_temp_peak = False
+plot_temp_peak = True  # Using
 box_psition_temp_peak = (1.095, 0.99)
 
 
 ############ body burning ######################
 
 # bodyburnig and increace temp in peaks
-plot_temp_peak_body = False
-box_psition_body = (1.096, 0.99)
+plot_temp_peak_body = True  # Using
+box_psition_body = (1.095, 0.92)
 
 # bodyburnig and increace temp in phosphorus
 plot_phosphorus_body = False
-box_psition_phosphorus_body = (1.095, 0.99)
+box_psition_phosphorus_body = (1.115, 0.98)
 # bodyburnig and increace temp in dE
 plot_dE_body = False
-box_psition_dE_body = (1.095, 0.99)
+box_psition_dE_body = (1.115, 0.98)
 # bodyburnig and increace temp in zm
-plot_zm_body = False
-box_psition_zm_body = (1.095, 0.99)
+plot_zm_body = True  # Using
+box_psition_zm_body = (1.115, 0.98)
 # bodyburnig and increace temp in zmKb
 plot_kbg_body = False
-box_psition_kbg_body = (1.05, 0.99)
+box_psition_kbg_body = (1.115, 0.98)
 
 ############# Fishes ####################
 # bodyburnig and increace temp in peaks
-plot_temp_peak_fish = True
-box_psition_fish = (1.065, 0.99)
+plot_temp_peak_fish = True  # Using
+box_psition_fish = (1.095, 0.98)
 
 # bodyburnig and increace temp in phosphorus
 plot_phosphorus_fish = False
-box_psition_phosphorus_fish = (1.095, 0.99)
+box_psition_phosphorus_fish = (1.115, 0.98)
 # bodyburnig and increace temp in dE
 plot_dE_fish = False
 box_psition_dE_fish = (1.065, 0.99)
@@ -452,13 +404,15 @@ if plot_zmKb:
                                O_values]
 
             # sns.set_style("whitegrid")
-            variables = ["Microcystin-LR ($\mu g/L$)", "CB biomass ($mg C/L$)",
+            variables = ["Microcystin-LR ($\mu g/L$)", "Cyanobacterial biomass ($mg C/L$)",
                          'Algal biomass ($mg C/L$)', "Dissolved $O_2$ ($mg O_2/L$)"]
         for j, var in enumerate(solution_values):
             axs[j].yaxis.set_major_formatter(y_formatter)
 
-            axs[j].tick_params(axis='y', labelsize=FONTSIZE)
-
+            axs[j].tick_params(axis='y', labelsize=FONTSIZE,
+                               pad=0.5)
+            axs[j].tick_params(axis='x', labelsize=FONTSIZE,
+                               pad=0.5)
             for spine in axs[j].spines.values():
                 spine.set_color('black')  # Set all spines color to black
             axs[j].tick_params(axis='both', which='both', bottom=True, top=False,
@@ -521,7 +475,8 @@ if plot_zmKb:
                 axs[j].xaxis.set_ticklabels(x_labels,
                                             rotation=90,
                                             fontsize=FONTSIZE)
-            axs[j].set_xlabel('')
+            axs[j].set_xlabel('Time (MM-DD)', fontsize=FONTSIZE,
+                              labelpad=2)
             axs[j].grid(False)
             color_index = i % len(colors)
 
@@ -529,13 +484,13 @@ if plot_zmKb:
                 line, = axs[j].plot(model_CyB.t[TIMEStap[0]:TIMEStap[1]],
                                     var[TIMEStap[0]:TIMEStap[1]],
                                     color=colors[color_index],
-                                    label=f"{b} m")  # Collect lines for legend
+                                    label=f"{b:.2f} m", linewidth=LINEWIDTH)  # Collect lines for legend
 
             elif b == 0.3:
                 line, = axs[j].plot(model_CyB.t[TIMEStap[0]:TIMEStap[1]],
                                     var[TIMEStap[0]:TIMEStap[1]],
                                     color=BASE_COLORS,
-                                    label=f"{b} m")
+                                    label=f"{b:.2f} m (base)", linewidth=LINEWIDTH)
             # legend_handles.append(line)  # Append line for legend
     # Add color bar
     if color_bar:
@@ -555,6 +510,7 @@ if plot_zmKb:
                         bbox_to_anchor=box_psition_zmKb,
                         fancybox=True, shadow=False, ncol=1,
                         title='Turbidity', fontsize=FONTSIZE)
+    legend.get_title().set_ha('center')
     plt.tight_layout()
     if SAVE_PLOT:
         # Save plots
@@ -576,7 +532,7 @@ if plot_z_m:
     y_formatter.orderOfMagnitude = 4  # Set the exponent to 4
 
     # p_values = [0.01, 0.03, 0.05, 0.07]
-    Z_values = list(np.append(np.round(np.arange(0.5, 3, 0.25), 2), 0))
+    Z_values = list(np.append(np.round(np.arange(0.25, 3, 0.25), 2), 0.0))
 
     if all_plot:
         # Create subplots
@@ -681,66 +637,116 @@ if plot_z_m:
         elif somePlots:
             solution_values = [M_values, B_values, A_values,
                                O_values]
-            sns.set_style("whitegrid")
+            # sns.set_style("whitegrid")
             # colors = sns.color_palette(map_color, n_colors=len(p_values) * 2)
 
             # variables = ["M $[\mu g/L]$", "B $[mgC/L]$ ",
             #              'A $[mgC/L]$', "O $[mg O_2/L]$"]
-            variables = ["Microcystin-LR ($\mu g/L$)", "CB biomass ($mgC/L$)",
+            variables = ["Microcystin-LR ($\mu g/L$)", "Cyanobacterial biomass ($mgC/L$)",
                          'Algal biomass ($mg C/L$)', "Dissolved $O_2$ ($mg O_2/L$)"]
-        for i, var in enumerate(solution_values):
+        color_index = Z_values.index(z_m) % len(colors)
+        for j, var in enumerate(solution_values):
 
-            axs[i].set_ylabel(variables[i])
-            color_index = Z_values.index(z_m) % len(colors)
+            axs[j].yaxis.set_major_formatter(y_formatter)
 
-            if z_m != 0:
-                line, = axs[i].plot(model_CyB.t, var, color=colors[color_index],
-                                    label=f"{z_m} m")
+            axs[j].tick_params(axis='y', labelsize=FONTSIZE,
+                               pad=0.5)
+            axs[j].tick_params(axis='x', labelsize=FONTSIZE,
+                               pad=0.5)
+            for spine in axs[j].spines.values():
+                spine.set_color('black')  # Set all spines color to black
+            axs[j].tick_params(axis='both', which='both', bottom=True, top=False,
+                               left=True, right=False, direction='out',
+                               length=tick_len, width=0.7, colors='black')
 
-            elif z_m == 0:
-                line, = axs[i].plot(model_CyB.t, var, color=BASE_COLORS,
-                                    label=f"{z_m} m (base)")
+            if variables[j] == "CyB":
+                var = B_values
+                axs[j].set_ylabel(f"mgC/L {variables[j]}",
+                                  fontsize=FONTSIZE)
+            else:
+                axs[j].set_ylabel(variables[j],
+                                  fontsize=FONTSIZE)
 
-            if fill:
-                axs[i].fill_between(model_CyB.t, var, var.min(),
-                                    color=colors[color_index], alpha=0.05)
+            max_values[j] = max(
+                max_values[j], var[TIMEStap[0]:TIMEStap[1]].max())
+            min_values[j] = min(
+                min_values[j], var[TIMEStap[0]:TIMEStap[1]].min())
+            # axs[j].set_ylim(min_values[j]*(1-0.05), max_values[j]*(1+0.1))
+            # axs[j].set_xlim(model_CyB.t[TIMEStap[0]:TIMEStap[1]].min(),
+            #                 model_CyB.t[TIMEStap[0]:TIMEStap[1]].max())
+            # axs[j].yaxis.set_major_formatter(y_formatter)
 
-            # all_handles.append(line)
-            # all_labels.append(f"P(0)={p}")
-            max_values[i] = max(max_values[i], var.max())
-            min_values[i] = min(min_values[i], var.min())
-            x_ticks = axs[i].xaxis.get_ticklocs()
-            if len(dates) > len(x_ticks):
-                x_labels = [DATES[int(x_val)] for x_val in x_ticks[:-1]]
-                axs[i].xaxis.set_ticklabels(x_labels,
-                                            rotation=30)
+            axs[j].xaxis.set_major_locator(
+                MaxNLocator(integer=True, nbins=NoBins))
+
+            x_ticks = axs[j].xaxis.get_ticklocs()
+
+            # x_ticks = np.array([i*60 for i in range(int(365/60))])
+
+            if len(dates) >= len(x_ticks):
+                max_tick = x_ticks.max()
+                No_days = len(DATES)
+                # x_labels_dates = [DATES[int((x_val/max_tick)*364)]
+                #             for x_val in x_ticks[:: SpaceDates ]]
+
+                x_labels = [''] * len(x_ticks)
+
+                # x_labels[::SpaceDates] = [DATES[int((x_val/max_tick)*No_days)]
+                #                           for x_val in x_ticks[:: SpaceDates]]
+                x_labels[::SpaceDates] = [dates[int(x_val)][5:]
+                                          for x_val in x_ticks[:: SpaceDates]]
+                axs[j].set_xticks(x_ticks)
+
+                axs[j].xaxis.set_ticklabels(x_labels,
+                                            rotation=90,
+                                            fontsize=FONTSIZE)
+
+                # Adjust the length of ticks with labels
+                for tick in axs[j].xaxis.get_major_ticks():
+                    if tick.label1.get_text():  # Check if tick has a label
+                        tick.tick1line.set_markersize(tick_len)
+                        # tick.tick2line.set_markersize(tick_len)
+                    else:
+                        tick.tick1line.set_markersize(other_tick_len)
+                        # tick.tick2line.set_markersize(other_tick_len)
+
             else:
                 x_labels = dates
-                axs[i].xaxis.set_ticklabels(x_labels,
-                                            rotation=30)
-            axs[i].set_xlabel('')
-            # axs[i].set_ylim(min_values[i], max_values[i]*(1+0.05))
-            # axs[i].set_xlim(model_CyB.t.min(), model_CyB.t.max())
-            axs[i].yaxis.set_major_formatter(y_formatter)
-            for spine in axs[i].spines.values():
-                spine.set_color('black')  # Set all spines color to black
-            axs[i].tick_params(axis='both', which='both', bottom=True, top=True,
-                               left=True, right=True, direction='in', length=4, width=1, colors='black')
-            # axs[i].legend(loc='upper right', bbox_to_anchor=(1.0, 1.0))
-            # axs[i].legend()
-            # axs[i].grid(True)
+                axs[j].xaxis.set_ticklabels(x_labels,
+                                            rotation=90,
+                                            fontsize=FONTSIZE)
+            axs[j].set_xlabel('Time (MM-DD)', fontsize=FONTSIZE,
+                              labelpad=2)
+            axs[j].grid(False)
+            # color_index = j % len(colors)
+
+            if z_m != 0:
+                line, = axs[j].plot(model_CyB.t, var, color=colors[color_index],
+                                    label=f"+{z_m:.2f} m", linewidth=LINEWIDTH)
+
+            elif z_m == 0:
+                line, = axs[j].plot(model_CyB.t, var, color=BASE_COLORS,
+                                    label=f"+{z_m:.2f} m (base)", linewidth=LINEWIDTH)
+
+            if fill:
+                axs[j].fill_between(model_CyB.t, var, var.min(),
+                                    color=colors[color_index], alpha=0.05)
 
     # axs[0].axhline(y=10, color=LINE_COLOR, linestyle='dotted')
-    # Set common x-axis label and title
-    # axs[-1].set_xlabel('Time (days)')
+
     if WithTitle:
         plt.suptitle(lake_name + ' for Different phosphorous values')
     handles, labels = axs[0].get_legend_handles_labels()
-
-    legend = fig.legend(handles, labels, loc='outside upper center',
+    # Create a sorted order based on the numeric values in the labels
+    sorted_indices = sorted(
+        range(len(labels)), key=lambda i: extract_value(labels[i]))
+    legend = fig.legend([handles[i] for i in sorted_indices],
+                        [labels[i] for i in sorted_indices],
+                        loc='outside upper center',
                         bbox_to_anchor=box_psition_z_m,
                         fancybox=True, shadow=False, ncol=1,
-                        title='Increase \n depth of epilimnion')
+                        title='Epilimnion depth\n comparison with\n the base depth')
+    legend.get_title().set_ha('center')
     # plt.setp(legend.get_title(),  multialignment='left', rotation=90)
 
     # Adjust layout for better readability
@@ -765,8 +771,9 @@ if plot_d_E:
     y_formatter.orderOfMagnitude = 4  # Set the exponent to 4
 
     # p_values = [0.01, 0.03, 0.05, 0.07]
-    d_values = list(np.around(np.arange(0.02, 0.08+0.05, 0.01), 2))
-
+    d_values = list(
+        np.around(np.arange(0.02+0.01, 0.08+0.05, 0.01), 2))
+    d_values.append(0.02)
     if all_plot:
         # Create subplots
         fig, axs = plt.subplots(7, 2, figsize=FigsizeAll)
@@ -875,49 +882,94 @@ if plot_d_E:
 
             # variables = ["M $[\mu g/L]$", "B $[mgC/L]$ ",
             #              'A $[mgC/L]$', "O $[mg O_2/L]$"]
-            variables = ["Microcystin-LR ($\mu g/L$)", "CB biomass ($mg C/L$)",
+            variables = ["Microcystin-LR ($\mu g/L$)", "Cyanobacterial biomass ($mg C/L$)",
                          'Algal biomass ($mg C/L$)', "Dissolved $O_2$ ($mg O_2/L$)"]
-        for i, var in enumerate(solution_values):
+        color_index = d_values.index(d_E) % len(colors)
+        for j, var in enumerate(solution_values):
 
-            axs[i].set_ylabel(variables[i])
-            color_index = d_values.index(d_E) % len(colors)
+            axs[j].yaxis.set_major_formatter(y_formatter)
+
+            axs[j].tick_params(axis='y', labelsize=FONTSIZE,
+                               pad=0.5)
+            axs[j].tick_params(axis='x', labelsize=FONTSIZE,
+                               pad=0.5)
+            for spine in axs[j].spines.values():
+                spine.set_color('black')  # Set all spines color to black
+            axs[j].tick_params(axis='both', which='both', bottom=True, top=False,
+                               left=True, right=False, direction='out',
+                               length=tick_len, width=0.7, colors='black')
+
+            if variables[j] == "CyB":
+                var = B_values
+                axs[j].set_ylabel(f"mgC/L {variables[j]}",
+                                  fontsize=FONTSIZE)
+            else:
+                axs[j].set_ylabel(variables[j],
+                                  fontsize=FONTSIZE)
+
+            max_values[j] = max(
+                max_values[j], var[TIMEStap[0]:TIMEStap[1]].max())
+            min_values[j] = min(
+                min_values[j], var[TIMEStap[0]:TIMEStap[1]].min())
+            # axs[j].set_ylim(min_values[j]*(1-0.05), max_values[j]*(1+0.1))
+            # axs[j].set_xlim(model_CyB.t[TIMEStap[0]:TIMEStap[1]].min(),
+            #                 model_CyB.t[TIMEStap[0]:TIMEStap[1]].max())
+            # axs[j].yaxis.set_major_formatter(y_formatter)
+
+            axs[j].xaxis.set_major_locator(
+                MaxNLocator(integer=True, nbins=NoBins))
+
+            x_ticks = axs[j].xaxis.get_ticklocs()
+
+            # x_ticks = np.array([i*60 for i in range(int(365/60))])
+
+            if len(dates) >= len(x_ticks):
+                max_tick = x_ticks.max()
+                No_days = len(DATES)
+                # x_labels_dates = [DATES[int((x_val/max_tick)*364)]
+                #             for x_val in x_ticks[:: SpaceDates ]]
+
+                x_labels = [''] * len(x_ticks)
+
+                # x_labels[::SpaceDates] = [DATES[int((x_val/max_tick)*No_days)]
+                #                           for x_val in x_ticks[:: SpaceDates]]
+                x_labels[::SpaceDates] = [dates[int(x_val)][5:]
+                                          for x_val in x_ticks[:: SpaceDates]]
+                axs[j].set_xticks(x_ticks)
+
+                axs[j].xaxis.set_ticklabels(x_labels,
+                                            rotation=90,
+                                            fontsize=FONTSIZE)
+
+                # Adjust the length of ticks with labels
+                for tick in axs[j].xaxis.get_major_ticks():
+                    if tick.label1.get_text():  # Check if tick has a label
+                        tick.tick1line.set_markersize(tick_len)
+                        # tick.tick2line.set_markersize(tick_len)
+                    else:
+                        tick.tick1line.set_markersize(other_tick_len)
+                        # tick.tick2line.set_markersize(other_tick_len)
+
+            else:
+                x_labels = dates
+                axs[j].xaxis.set_ticklabels(x_labels,
+                                            rotation=90,
+                                            fontsize=FONTSIZE)
+            axs[j].set_xlabel('Time (MM-DD)', fontsize=FONTSIZE,
+                              labelpad=2)
+            axs[j].grid(False)
 
             if d_E != 0.02:
-                line, = axs[i].plot(model_CyB.t, var, color=colors[color_index],
-                                    label=f"{d_E} m/day")
+                line, = axs[j].plot(model_CyB.t, var, color=colors[color_index],
+                                    label=f"{d_E:.2f} m/day", linewidth=LINEWIDTH)
 
             elif d_E == 0.02:
-                line, = axs[i].plot(model_CyB.t, var, color=BASE_COLORS,
-                                    label=f"{d_E} m/day (base)")
+                line, = axs[j].plot(model_CyB.t, var, color=BASE_COLORS,
+                                    label=f"{d_E:.2f} m/day (base)", linewidth=LINEWIDTH)
 
             if fill:
                 axs[i].fill_between(model_CyB.t, var, var.min(),
                                     color=colors[color_index], alpha=0.05)
-
-            # all_handles.append(line)
-            # all_labels.append(f"P(0)={p}")
-            max_values[i] = max(max_values[i], var.max())
-            min_values[i] = min(min_values[i], var.min())
-            x_ticks = axs[i].xaxis.get_ticklocs()
-            if len(dates) > len(x_ticks):
-                x_labels = [DATES[int(x_val)] for x_val in x_ticks[:-1]]
-                axs[i].xaxis.set_ticklabels(x_labels,
-                                            rotation=30)
-            else:
-                x_labels = dates
-                axs[i].xaxis.set_ticklabels(x_labels,
-                                            rotation=30)
-            axs[i].set_xlabel('')
-            # axs[i].set_ylim(min_values[i], max_values[i]*(1+0.05))
-            # axs[i].set_xlim(model_CyB.t.min(), model_CyB.t.max())
-            axs[i].yaxis.set_major_formatter(y_formatter)
-            for spine in axs[i].spines.values():
-                spine.set_color('black')  # Set all spines color to black
-            axs[i].tick_params(axis='both', which='both', bottom=True, top=True,
-                               left=True, right=True, direction='in', length=4, width=1, colors='black')
-            # axs[i].legend(loc='upper right', bbox_to_anchor=(1.0, 1.0))
-            # axs[i].legend()
-            # axs[i].grid(True)
 
     # axs[0].axhline(y=10, color=LINE_COLOR, linestyle='dotted')
     # Set common x-axis label and title
@@ -925,11 +977,16 @@ if plot_d_E:
     if WithTitle:
         plt.suptitle(lake_name + ' for Different phosphorous values')
     handles, labels = axs[0].get_legend_handles_labels()
-
-    legend = fig.legend(handles, labels, loc='outside upper center',
+    # Create a sorted order based on the numeric values in the labels
+    sorted_indices = sorted(
+        range(len(labels)), key=lambda i: extract_value(labels[i]))
+    legend = fig.legend([handles[i] for i in sorted_indices],
+                        [labels[i] for i in sorted_indices],
+                        loc='outside upper center',
                         bbox_to_anchor=box_psition_d_E,
                         fancybox=True, shadow=False, ncol=1,
                         title='Water exchange rate')
+    legend.get_title().set_ha('center')
     # plt.setp(legend.get_title(),  multialignment='left', rotation=90)
 
     # Adjust layout for better readability
@@ -954,8 +1011,8 @@ if plot_phos:
     y_formatter.orderOfMagnitude = 4  # Set the exponent to 4
 
     # p_values = [0.01, 0.03, 0.05, 0.07]
-    p_values = [0.01, 0.03, 0.07, 0.1, 0.2,
-                0.3, 0.4, 0.5, 0.6, 0.7, P_0]
+    p_values = [0.01, 0.02, 0.03, 0.04, 0.06, 0.07, 0.1, 0.2,
+                0.3, 0.4, P_0]
     # p_values = [0.1, 0.2, 0.3, 0.4]
     # p_values = [0.5, 0.6, 0.7, 0.8]
 
@@ -1054,57 +1111,94 @@ if plot_phos:
             colors = cm.GnBu(np.linspace(0.3, 1, len(p_values)))
             # variables = ["M $[\mu g/L]$", "B $[mgC/L]$ ",
             #              'A $[mgC/L]$', "O $[mg O_2/L]$"]
-            variables = ["Microcystin-LR ($\mu g/L$)", "CB biomass ($mgC/L$)",
+            variables = ["Microcystin-LR ($\mu g/L$)", "Cyanobacterial biomass ($mgC/L$)",
                          'Algal biomass ($mgC/L$)', "Dissolved $O_2$ ($ mg O_2/L$)"]
-        for i, var in enumerate(solution_values):
+        color_index = p_values.index(p) % len(colors)
+        for j, var in enumerate(solution_values):
 
-            # var = None
-            if variables[i] == "CyB":
-                # Apply the formatter only to the y-axis of the subplot corresponding to "B_values"
-                axs[i].yaxis.set_major_formatter(y_formatter)
+            axs[j].yaxis.set_major_formatter(y_formatter)
+
+            axs[j].tick_params(axis='y', labelsize=FONTSIZE,
+                               pad=0.5)
+            axs[j].tick_params(axis='x', labelsize=FONTSIZE,
+                               pad=0.5)
+            for spine in axs[j].spines.values():
+                spine.set_color('black')  # Set all spines color to black
+            axs[j].tick_params(axis='both', which='both', bottom=True, top=False,
+                               left=True, right=False, direction='out',
+                               length=tick_len, width=0.7, colors='black')
+
+            if variables[j] == "CyB":
                 var = B_values
-                axs[i].set_ylabel(f"mgC/L {variables[i]}")
+                axs[j].set_ylabel(f"mgC/L {variables[j]}",
+                                  fontsize=FONTSIZE)
             else:
-                # var = solution.T[variables.index(variables[i])]
-                axs[i].set_ylabel(variables[i])
-            color_index = p_values.index(p) % len(colors)
+                axs[j].set_ylabel(variables[j],
+                                  fontsize=FONTSIZE)
 
-            if p != P_0:
-                line, = axs[i].plot(model_CyB.t, var, color=colors[color_index],
-                                    label=f"{p} mgP/L")  # Collect lines for legend
+            max_values[j] = max(
+                max_values[j], var[TIMEStap[0]:TIMEStap[1]].max())
+            min_values[j] = min(
+                min_values[j], var[TIMEStap[0]:TIMEStap[1]].min())
+            # axs[j].set_ylim(min_values[j]*(1-0.05), max_values[j]*(1+0.1))
+            # axs[j].set_xlim(model_CyB.t[TIMEStap[0]:TIMEStap[1]].min(),
+            #                 model_CyB.t[TIMEStap[0]:TIMEStap[1]].max())
+            # axs[j].yaxis.set_major_formatter(y_formatter)
 
-            elif p == P_0:
-                line, = axs[i].plot(model_CyB.t, var, color=BASE_COLORS,
-                                    label=f"{p} mgP/L (base)")
+            axs[j].xaxis.set_major_locator(
+                MaxNLocator(integer=True, nbins=NoBins))
 
-            if fill:
-                axs[i].fill_between(model_CyB.t, var, var.min(),
-                                    color=colors[color_index], alpha=0.05)
+            x_ticks = axs[j].xaxis.get_ticklocs()
 
-            # all_handles.append(line)
-            # all_labels.append(f"P(0)={p}")
-            # max_values[i] = max(max_values[i], var.max())
-            # min_values[i] = min(min_values[i], var.min())
-            x_ticks = axs[i].xaxis.get_ticklocs()
-            if len(dates) > len(x_ticks):
-                x_labels = [DATES[int(x_val)] for x_val in x_ticks[:-1]]
-                axs[i].xaxis.set_ticklabels(x_labels,
-                                            rotation=30)
+            # x_ticks = np.array([i*60 for i in range(int(365/60))])
+
+            if len(dates) >= len(x_ticks):
+                max_tick = x_ticks.max()
+                No_days = len(DATES)
+                # x_labels_dates = [DATES[int((x_val/max_tick)*364)]
+                #             for x_val in x_ticks[:: SpaceDates ]]
+
+                x_labels = [''] * len(x_ticks)
+
+                # x_labels[::SpaceDates] = [DATES[int((x_val/max_tick)*No_days)]
+                #                           for x_val in x_ticks[:: SpaceDates]]
+                x_labels[::SpaceDates] = [dates[int(x_val)][5:]
+                                          for x_val in x_ticks[:: SpaceDates]]
+                axs[j].set_xticks(x_ticks)
+
+                axs[j].xaxis.set_ticklabels(x_labels,
+                                            rotation=90,
+                                            fontsize=FONTSIZE)
+
+                # Adjust the length of ticks with labels
+                for tick in axs[j].xaxis.get_major_ticks():
+                    if tick.label1.get_text():  # Check if tick has a label
+                        tick.tick1line.set_markersize(tick_len)
+                        # tick.tick2line.set_markersize(tick_len)
+                    else:
+                        tick.tick1line.set_markersize(other_tick_len)
+                        # tick.tick2line.set_markersize(other_tick_len)
+
             else:
                 x_labels = dates
-                axs[i].xaxis.set_ticklabels(x_labels,
-                                            rotation=30)
-            axs[i].set_xlabel('')
-            # axs[i].set_ylim(min_values[i], max_values[i]*(1+0.05))
-            # axs[i].set_xlim(model_CyB.t.min(), model_CyB.t.max())
-            axs[i].yaxis.set_major_formatter(y_formatter)
-            for spine in axs[i].spines.values():
-                spine.set_color('black')  # Set all spines color to black
-            axs[i].tick_params(axis='both', which='both', bottom=True, top=True,
-                               left=True, right=True, direction='in', length=4, width=1, colors='black')
-            # axs[i].legend(loc='upper right', bbox_to_anchor=(1.0, 1.0))
-            # axs[i].legend()
-            # axs[i].grid(True)
+                axs[j].xaxis.set_ticklabels(x_labels,
+                                            rotation=90,
+                                            fontsize=FONTSIZE)
+            axs[j].set_xlabel('Time (MM-DD)', fontsize=FONTSIZE,
+                              labelpad=2)
+            axs[j].grid(False)
+
+            if p != P_0:
+                line, = axs[j].plot(model_CyB.t, var, color=colors[color_index],
+                                    label=f"{p:.2f} mgP/L", linewidth=LINEWIDTH)  # Collect lines for legend
+
+            elif p == P_0:
+                line, = axs[j].plot(model_CyB.t, var, color=BASE_COLORS,
+                                    label=f"{p:.2f} mgP/L (base)", linewidth=LINEWIDTH)
+
+            if fill:
+                axs[j].fill_between(model_CyB.t, var, var.min(),
+                                    color=colors[color_index], alpha=0.05)
 
     # axs[0].axhline(y=10, color=LINE_COLOR, linestyle='dotted')
     # Set common x-axis label and title
@@ -1113,10 +1207,15 @@ if plot_phos:
         plt.suptitle(lake_name + ' for Different phosphorous values')
     handles, labels = axs[0].get_legend_handles_labels()
 
-    legend = fig.legend(handles, labels, loc='outside upper center',
+    sorted_indices = sorted(
+        range(len(labels)), key=lambda i: extract_value(labels[i]))
+    legend = fig.legend([handles[i] for i in sorted_indices],
+                        [labels[i] for i in sorted_indices],
+                        loc='outside upper center',
                         bbox_to_anchor=box_psition_phos,
                         fancybox=True, shadow=False, ncol=1,
-                        title='Initial $P$')
+                        title='Initial phosphorus')
+    legend.get_title().set_ha('center')
     # plt.setp(legend.get_title(),  multialignment='left', rotation=90)
 
     # Adjust layout for better readability
@@ -1142,7 +1241,7 @@ if plot_temp_peak:
     # Temp_increase = [0, 0.4, 0.6, 0.7, 0.8, 1.0, 1.1, 1.4,
     #                  1.7, 2.6, 3.4]
 
-    Temp_increase = np.append(np.round(np.arange(0.2, 3.4+0.2, 0.2), 1), 0)
+    Temp_increase = np.append(np.round(np.arange(0.3, 3.4+0.3, 0.3), 1), 0)
     Temp_increase = list(Temp_increase)
     # colors = sns.color_palette(map_color, n_colors=len(Temp_increase))
     colors = cm.GnBu(np.linspace(0.3, 1, len(Temp_increase)))
@@ -1165,38 +1264,6 @@ if plot_temp_peak:
     min_values = [10, 10, 10, 10]
     for Temp in Temp_increase:
         model_CyB = read_params()
-        # if Temp != 0:
-        #     # Data Temperature
-        #     days_temp = np.array(
-        #         [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334])
-        #     temp_water = np.array(
-        #         [7.35, 7.3, 7.91, 9.4, 11.67, 13.59, 15.49, 16.02, 14.08, 11.29, 9.26, 8.07])
-
-        #     delta_temp = Temp
-
-        #     for i in range(temp_water.shape[0]):
-        #         if temp_water[i] > 11:
-        #             temp_water[i] = temp_water[i] + delta_temp
-
-        #     # Define the logistic function
-        #     def temperature(t, K, T, t_0, k_0):
-        #         return K*np.exp(-T*(t-t_0)**2)+k_0
-
-        #     # Set bounds for positive values
-        #     bounds = ([0, 0, 0, 0], [np.inf, np.inf, np.inf, np.inf])
-
-        #     # Fit the logistic function to the data
-        #     initial_guess = [15, 0, 200, 7]
-        #     params, covariance = curve_fit(temperature,
-        #                                    days_temp,
-        #                                    temp_water,
-        #                                    p0=initial_guess,
-        #                                    bounds=bounds)
-
-        #     model_CyB.max_temp = round(params[0], 5)
-        #     model_CyB.min_temp = round(params[3], 5)
-        #     model_CyB.max_temp_time = round(params[2]-20, 5)
-        #     model_CyB.T = round(params[1], 5)
 
         # Different temperature
         model_CyB.auxTemp = Temp
@@ -1260,7 +1327,7 @@ if plot_temp_peak:
         elif somePlots:
             solution_values = [M_values, B_values, A_values,
                                O_values]
-            variables = ["Microcystin-LR $(\mu g/L$)", "CB biomass ($mg C/L$)",
+            variables = ["Microcystin-LR $(\mu g/L$)", "Cyanobacterial biomass ($mg C/L$)",
                          'Algal biomass  ($mg C/L$)', "Dissolved $O_2$  ($ mg O_2/L$)"]
         for i, var in enumerate(solution_values):
             # var = solution.T[variables.index(variables[i])]
@@ -1326,18 +1393,17 @@ if plot_temp_peak:
                 x_labels = dates
                 axs[i].xaxis.set_ticklabels(x_labels,
                                             rotation=30)
-            axs[i].set_xlabel('')
+            axs[i].set_xlabel('Time (MM-DD)', fontsize=FONTSIZE,
+                              labelpad=2)
             axs[i].grid(False)
             color_index = Temp_increase.index(Temp) % len(colors)
 
             if Temp != 0:
                 line, = axs[i].plot(model_CyB.t, var, color=colors[color_index],
-                                    label=f"{Temp}",
-                                    linewidth=linewidth)
+                                    label=f"+{Temp}", linewidth=LINEWIDTH)
             elif Temp == 0:
                 line, = axs[i].plot(model_CyB.t, var, color=BASE_COLORS,
-                                    label=f"{Temp} (base)",
-                                    linewidth=linewidth)
+                                    label=f"+{Temp} (base)", linewidth=LINEWIDTH)
 
     # Set common x-axis label and title
     # axs[0].axhline(y=10, color=LINE_COLOR, linestyle='dotted')
@@ -1345,30 +1411,16 @@ if plot_temp_peak:
     if WithTitle:
         plt.suptitle(lake_name + ' increase of maximum peaks')
     handles, labels = axs[0].get_legend_handles_labels()
-    # if color_bar:
-    #     # Create a ScalarMappable object
-    #     sm = plt.cm.ScalarMappable(cmap=map_color, norm=plt.Normalize(
-    #         vmin=min(Temp_increase), vmax=max(Temp_increase)))
 
-    #     # Add color bar to the figure
-    #     plt.colorbar(sm, ax=axs, cmap=colors)
-    # else:
-    #     handles, labels = axs[0].get_legend_handles_labels()
-    #     # box_psition = (0.96, 0.88)
-    #     legend = fig.legend(handles[:-1], labels, loc='outside upper center',
-    #                         bbox_to_anchor=box_psition_temp_peak,
-    #                         fancybox=True, shadow=False, ncol=1,
-    #                         title='Increase \n in $\degree C$',
-    #                         fontsize=FONTSIZE,
-    #                         title_fontsize=FONTSIZETITLE)
-    #     for lineleg in legend.legendHandles:
-    #         lineleg.set_linewidth(LegendWidth)
-    handles, labels = axs[0].get_legend_handles_labels()
-
-    legend = fig.legend(handles, labels, loc='outside upper center',
+    sorted_indices = sorted(
+        range(len(labels)), key=lambda i: extract_value(labels[i]))
+    legend = fig.legend([handles[i] for i in sorted_indices],
+                        [labels[i] for i in sorted_indices],
+                        loc='outside upper center',
                         bbox_to_anchor=box_psition_temp_peak,
                         fancybox=True, shadow=False, ncol=1,
-                        title='Increase \n in $\degree C$')
+                        title='Increase\n in $\degree C$')
+    legend.get_title().set_ha('center')
     # Adjust the spacing between subplots
     # plt.subplots_adjust(hspace=hspace, wspace=wspace)
     plt.tight_layout()
@@ -1394,17 +1446,7 @@ if plot_temp_peak_body:
     y_formatter.set_powerlimits((-3, 4))  # Adjust the power limits as needed
     y_formatter.orderOfMagnitude = 4  # Set the exponent to 4
 
-    # Temp_increase = [0, 0.1, 0.2, 0.3, 0.4]
-    # Temp_increase = [0, 0.6, 0.7, 1.0, 1.1, 1.4]
-    # Temp_increase = [0, 0.4, 0.8, 1.7, 2.6, 3.4]
-
-    # Temp_increase = [0, 0.1, 0.2, 0.3,
-    # 0.4, 0.6, 0.7, 0.8]
-
-    Temp_increase = [0, 0.4, 0.6, 0.7, 0.8, 1.0, 1.1, 1.4,
-                     1.7, 2.6, 3.4]
-
-    Temp_increase = np.round(np.arange(0.2, 3.4+0.2, 0.2), 1)
+    Temp_increase = np.round(np.arange(0.3, 3.4+0.3, 0.3), 1)
     Temp_increase = list(Temp_increase)
     Temp_increase.append(0)
     # colors = sns.color_palette(map_color, n_colors=len(Temp_increase))
@@ -1505,7 +1547,7 @@ if plot_temp_peak_body:
                            W_values, v_W_values]
 
         variables = ["Microcystin-LR $(\mu g/L$)",
-                     "CB biomass ($mg C/L$)",
+                     "Cyanobacterial biomass ($mg C/L$)",
                      'Algal biomass  ($mg C/L$)',
                      "Dissolved $O_2$  ($ mg O_2/L$)",
                      'Yellow perch biomass ($mg C/L$)',
@@ -1590,19 +1632,17 @@ if plot_temp_peak_body:
                 x_labels = dates
                 axs[i].xaxis.set_ticklabels(x_labels,
                                             rotation=30)
-            axs[i].set_xlabel('', fontsize=FONTSIZE,
+            axs[i].set_xlabel('Time (MM-DD)', fontsize=FONTSIZE,
                               labelpad=2)
             axs[i].grid(False)
             color_index = Temp_increase.index(Temp) % len(colors)
 
             if Temp != 0:
                 line, = axs[i].plot(model_CyB.t, var, color=colors[color_index],
-                                    label=f"{Temp}",
-                                    linewidth=linewidth)
+                                    label=f"+{Temp:.2f}", linewidth=LINEWIDTH)
             elif Temp == 0:
                 line, = axs[i].plot(model_CyB.t, var, color=BASE_COLORS,
-                                    label=f"{Temp}",
-                                    linewidth=linewidth)
+                                    label=f"+{Temp:.2f} (base)", linewidth=LINEWIDTH)
 
     # Set common x-axis label and title
     # axs[0].axhline(y=10, color=LINE_COLOR, linestyle='dotted')
@@ -1610,32 +1650,17 @@ if plot_temp_peak_body:
     if WithTitle:
         plt.suptitle(lake_name + ' increase of maximum peaks')
     handles, labels = axs[0].get_legend_handles_labels()
-    # if color_bar:
-    #     # Create a ScalarMappable object
-    #     sm = plt.cm.ScalarMappable(cmap=map_color, norm=plt.Normalize(
-    #         vmin=min(Temp_increase), vmax=max(Temp_increase)))
 
-    #     # Add color bar to the figure
-    #     plt.colorbar(sm, ax=axs, cmap=colors)
-    # else:
-    #     handles, labels = axs[0].get_legend_handles_labels()
-    #     # box_psition = (0.96, 0.88)
-    #     legend = fig.legend(handles[:-1], labels, loc='outside upper center',
-    #                         bbox_to_anchor=box_psition_body,
-    #                         fancybox=True, shadow=False, ncol=1,
-    #                         title='Increase \n in $\degree C$',
-    #                         fontsize=FONTSIZE,
-    #                         title_fontsize=FONTSIZETITLE)
-    #     for lineleg in legend.legendHandles:
-    #         lineleg.set_linewidth(LegendWidth)
-
-    handles, labels = axs[0].get_legend_handles_labels()
-
-    legend = fig.legend(handles, labels, loc='outside upper center',
+    sorted_indices = sorted(
+        range(len(labels)), key=lambda i: extract_value(labels[i]))
+    legend = fig.legend([handles[i] for i in sorted_indices],
+                        [labels[i] for i in sorted_indices],
+                        loc='outside upper center',
                         bbox_to_anchor=box_psition_body,
                         fancybox=True, shadow=False, ncol=1,
-                        title='Increase \n in $\degree C$')
+                        title='Increase\n in $\degree C$')
 
+    legend.get_title().set_ha('center')
     # Adjust the spacing between subplots
     # plt.subplots_adjust(hspace=hspace, wspace=wspace)
     plt.tight_layout()
@@ -1718,56 +1743,92 @@ if plot_phosphorus_body:
 
         variables = ['Body burden of yellow perch',
                      'Body burden of walleye']
+        color_index = p_values.index(p) % len(colors)
+        for j, var in enumerate(solution_values):
 
-        for i, var in enumerate(solution_values):
+            axs[j].yaxis.set_major_formatter(y_formatter)
 
-            # var = None
-            if variables[i] == "CyB":
-                # Apply the formatter only to the y-axis of the subplot corresponding to "B_values"
-                axs[i].yaxis.set_major_formatter(y_formatter)
+            axs[j].tick_params(axis='y', labelsize=FONTSIZE,
+                               pad=0.5)
+            axs[j].tick_params(axis='x', labelsize=FONTSIZE,
+                               pad=0.5)
+            for spine in axs[j].spines.values():
+                spine.set_color('black')  # Set all spines color to black
+            axs[j].tick_params(axis='both', which='both', bottom=True, top=False,
+                               left=True, right=False, direction='out',
+                               length=tick_len, width=0.7, colors='black')
+
+            if variables[j] == "CyB":
                 var = B_values
-                axs[i].set_ylabel(f"mgC/L {variables[i]}")
+                axs[j].set_ylabel(f"mgC/L {variables[j]}",
+                                  fontsize=FONTSIZE)
             else:
-                # var = solution.T[variables.index(variables[i])]
-                axs[i].set_ylabel(variables[i])
-            color_index = p_values.index(p) % len(colors)
+                axs[j].set_ylabel(variables[j],
+                                  fontsize=FONTSIZE)
 
-            if p != P_0:
-                line, = axs[i].plot(model_CyB.t, var, color=colors[color_index],
-                                    label=f"{p} mgP/L")  # Collect lines for legend
+            max_values[j] = max(
+                max_values[j], var[TIMEStap[0]:TIMEStap[1]].max())
+            min_values[j] = min(
+                min_values[j], var[TIMEStap[0]:TIMEStap[1]].min())
+            # axs[j].set_ylim(min_values[j]*(1-0.05), max_values[j]*(1+0.1))
+            # axs[j].set_xlim(model_CyB.t[TIMEStap[0]:TIMEStap[1]].min(),
+            #                 model_CyB.t[TIMEStap[0]:TIMEStap[1]].max())
+            # axs[j].yaxis.set_major_formatter(y_formatter)
 
-            elif p == P_0:
-                line, = axs[i].plot(model_CyB.t, var, color=BASE_COLORS,
-                                    label=f"{p} mgP/L (base)")
+            axs[j].xaxis.set_major_locator(
+                MaxNLocator(integer=True, nbins=NoBins))
 
-            if fill:
-                axs[i].fill_between(model_CyB.t, var, var.min(),
-                                    color=colors[color_index], alpha=0.05)
+            x_ticks = axs[j].xaxis.get_ticklocs()
 
-            # all_handles.append(line)
-            # all_labels.append(f"P(0)={p}")
-            max_values[i] = max(max_values[i], var.max())
-            min_values[i] = min(min_values[i], var.min())
-            x_ticks = axs[i].xaxis.get_ticklocs()
-            if len(dates) > len(x_ticks):
-                x_labels = [DATES[int(x_val)] for x_val in x_ticks[:-1]]
-                axs[i].xaxis.set_ticklabels(x_labels,
-                                            rotation=30)
+            # x_ticks = np.array([i*60 for i in range(int(365/60))])
+
+            if len(dates) >= len(x_ticks):
+                max_tick = x_ticks.max()
+                No_days = len(DATES)
+                # x_labels_dates = [DATES[int((x_val/max_tick)*364)]
+                #             for x_val in x_ticks[:: SpaceDates ]]
+
+                x_labels = [''] * len(x_ticks)
+
+                # x_labels[::SpaceDates] = [DATES[int((x_val/max_tick)*No_days)]
+                #                           for x_val in x_ticks[:: SpaceDates]]
+                x_labels[::SpaceDates] = [dates[int(x_val)][5:]
+                                          for x_val in x_ticks[:: SpaceDates]]
+                axs[j].set_xticks(x_ticks)
+
+                axs[j].xaxis.set_ticklabels(x_labels,
+                                            rotation=90,
+                                            fontsize=FONTSIZE)
+
+                # Adjust the length of ticks with labels
+                for tick in axs[j].xaxis.get_major_ticks():
+                    if tick.label1.get_text():  # Check if tick has a label
+                        tick.tick1line.set_markersize(tick_len)
+                        # tick.tick2line.set_markersize(tick_len)
+                    else:
+                        tick.tick1line.set_markersize(other_tick_len)
+                        # tick.tick2line.set_markersize(other_tick_len)
+
             else:
                 x_labels = dates
-                axs[i].xaxis.set_ticklabels(x_labels,
-                                            rotation=30)
-            axs[i].set_xlabel('')
-            # axs[i].set_ylim(min_values[i], max_values[i]*(1+0.05))
-            # axs[i].set_xlim(model_CyB.t.min(), model_CyB.t.max())
-            axs[i].yaxis.set_major_formatter(y_formatter)
-            for spine in axs[i].spines.values():
-                spine.set_color('black')  # Set all spines color to black
-            axs[i].tick_params(axis='both', which='both', bottom=True, top=True,
-                               left=True, right=True, direction='in', length=4, width=1, colors='black')
-            # axs[i].legend(loc='upper right', bbox_to_anchor=(1.0, 1.0))
-            # axs[i].legend()
-            # axs[i].grid(True)
+                axs[j].xaxis.set_ticklabels(x_labels,
+                                            rotation=90,
+                                            fontsize=FONTSIZE)
+            axs[j].set_xlabel('Time (MM-DD)', fontsize=FONTSIZE,
+                              labelpad=2)
+            axs[j].grid(False)
+
+            if p != P_0:
+                line, = axs[j].plot(model_CyB.t, var, color=colors[color_index],
+                                    label=f"{p:.2f} mgP/L", linewidth=LINEWIDTH)  # Collect lines for legend
+
+            elif p == P_0:
+                line, = axs[j].plot(model_CyB.t, var, color=BASE_COLORS,
+                                    label=f"{p:.2f} mgP/L (base)", linewidth=LINEWIDTH)
+
+            if fill:
+                axs[j].fill_between(model_CyB.t, var, var.min(),
+                                    color=colors[color_index], alpha=0.05)
 
     # axs[0].axhline(y=10, color=LINE_COLOR, linestyle='dotted')
     # Set common x-axis label and title
@@ -1777,10 +1838,15 @@ if plot_phosphorus_body:
         plt.suptitle(lake_name + ' for Different phosphorous values')
     handles, labels = axs[0].get_legend_handles_labels()
 
-    legend = fig.legend(handles, labels, loc='outside upper center',
+    sorted_indices = sorted(
+        range(len(labels)), key=lambda i: extract_value(labels[i]))
+    legend = fig.legend([handles[i] for i in sorted_indices],
+                        [labels[i] for i in sorted_indices],
+                        loc='outside upper center',
                         bbox_to_anchor=box_psition_phosphorus_body,
                         fancybox=True, shadow=False, ncol=1,
                         title='Initial $P$')
+    legend.get_title().set_ha('center')
     # plt.setp(legend.get_title(),  multialignment='left', rotation=90)
 
     # Adjust layout for better readability
@@ -1878,48 +1944,92 @@ if plot_dE_body:
 
         variables = ['Body burden of yellow perch',
                      'Body burden of walleye']
+        color_index = d_values.index(d_E) % len(colors)
+        for j, var in enumerate(solution_values):
 
-        for i, var in enumerate(solution_values):
+            axs[j].yaxis.set_major_formatter(y_formatter)
 
-            axs[i].set_ylabel(variables[i])
-            color_index = d_values.index(d_E) % len(colors)
+            axs[j].tick_params(axis='y', labelsize=FONTSIZE,
+                               pad=0.5)
+            axs[j].tick_params(axis='x', labelsize=FONTSIZE,
+                               pad=0.5)
+            for spine in axs[j].spines.values():
+                spine.set_color('black')  # Set all spines color to black
+            axs[j].tick_params(axis='both', which='both', bottom=True, top=False,
+                               left=True, right=False, direction='out',
+                               length=tick_len, width=0.7, colors='black')
 
-            if d_E != 0.02:
-                line, = axs[i].plot(model_CyB.t, var, color=colors[color_index],
-                                    label=f"{d_E} m/day")
+            if variables[j] == "CyB":
+                var = B_values
+                axs[j].set_ylabel(f"mgC/L {variables[j]}",
+                                  fontsize=FONTSIZE)
+            else:
+                axs[j].set_ylabel(variables[j],
+                                  fontsize=FONTSIZE)
 
-            elif d_E == 0.02:
-                line, = axs[i].plot(model_CyB.t, var, color=BASE_COLORS,
-                                    label=f"{d_E} m/day (base)")
+            max_values[j] = max(
+                max_values[j], var[TIMEStap[0]:TIMEStap[1]].max())
+            min_values[j] = min(
+                min_values[j], var[TIMEStap[0]:TIMEStap[1]].min())
+            # axs[j].set_ylim(min_values[j]*(1-0.05), max_values[j]*(1+0.1))
+            # axs[j].set_xlim(model_CyB.t[TIMEStap[0]:TIMEStap[1]].min(),
+            #                 model_CyB.t[TIMEStap[0]:TIMEStap[1]].max())
+            # axs[j].yaxis.set_major_formatter(y_formatter)
 
-            if fill:
-                axs[i].fill_between(model_CyB.t, var, var.min(),
-                                    color=colors[color_index], alpha=0.05)
+            axs[j].xaxis.set_major_locator(
+                MaxNLocator(integer=True, nbins=NoBins))
 
-            # all_handles.append(line)
-            # all_labels.append(f"P(0)={p}")
-            max_values[i] = max(max_values[i], var.max())
-            min_values[i] = min(min_values[i], var.min())
-            x_ticks = axs[i].xaxis.get_ticklocs()
-            if len(dates) > len(x_ticks):
-                x_labels = [DATES[int(x_val)] for x_val in x_ticks[:-1]]
-                axs[i].xaxis.set_ticklabels(x_labels,
-                                            rotation=30)
+            x_ticks = axs[j].xaxis.get_ticklocs()
+
+            # x_ticks = np.array([i*60 for i in range(int(365/60))])
+
+            if len(dates) >= len(x_ticks):
+                max_tick = x_ticks.max()
+                No_days = len(DATES)
+                # x_labels_dates = [DATES[int((x_val/max_tick)*364)]
+                #             for x_val in x_ticks[:: SpaceDates ]]
+
+                x_labels = [''] * len(x_ticks)
+
+                # x_labels[::SpaceDates] = [DATES[int((x_val/max_tick)*No_days)]
+                #                           for x_val in x_ticks[:: SpaceDates]]
+                x_labels[::SpaceDates] = [dates[int(x_val)][5:]
+                                          for x_val in x_ticks[:: SpaceDates]]
+                axs[j].set_xticks(x_ticks)
+
+                axs[j].xaxis.set_ticklabels(x_labels,
+                                            rotation=90,
+                                            fontsize=FONTSIZE)
+
+                # Adjust the length of ticks with labels
+                for tick in axs[j].xaxis.get_major_ticks():
+                    if tick.label1.get_text():  # Check if tick has a label
+                        tick.tick1line.set_markersize(tick_len)
+                        # tick.tick2line.set_markersize(tick_len)
+                    else:
+                        tick.tick1line.set_markersize(other_tick_len)
+                        # tick.tick2line.set_markersize(other_tick_len)
+
             else:
                 x_labels = dates
-                axs[i].xaxis.set_ticklabels(x_labels,
-                                            rotation=30)
-            axs[i].set_xlabel('')
-            # axs[i].set_ylim(min_values[i], max_values[i]*(1+0.05))
-            # axs[i].set_xlim(model_CyB.t.min(), model_CyB.t.max())
-            axs[i].yaxis.set_major_formatter(y_formatter)
-            for spine in axs[i].spines.values():
-                spine.set_color('black')  # Set all spines color to black
-            axs[i].tick_params(axis='both', which='both', bottom=True, top=True,
-                               left=True, right=True, direction='in', length=4, width=1, colors='black')
-            # axs[i].legend(loc='upper right', bbox_to_anchor=(1.0, 1.0))
-            # axs[i].legend()
-            # axs[i].grid(True)
+                axs[j].xaxis.set_ticklabels(x_labels,
+                                            rotation=90,
+                                            fontsize=FONTSIZE)
+            axs[j].set_xlabel('Time (MM-DD)', fontsize=FONTSIZE,
+                              labelpad=2)
+            axs[j].grid(False)
+
+            if d_E != 0.02:
+                line, = axs[j].plot(model_CyB.t, var, color=colors[color_index],
+                                    label=f"{d_E:.2f} m/day", linewidth=LINEWIDTH)
+
+            elif d_E == 0.02:
+                line, = axs[j].plot(model_CyB.t, var, color=BASE_COLORS,
+                                    label=f"{d_E:.2f} m/day (base)", linewidth=LINEWIDTH)
+
+            if fill:
+                axs[j].fill_between(model_CyB.t, var, var.min(),
+                                    color=colors[color_index], alpha=0.05)
 
     # axs[0].axhline(y=10, color=LINE_COLOR, linestyle='dotted')
     # Set common x-axis label and title
@@ -1929,10 +2039,15 @@ if plot_dE_body:
         plt.suptitle(lake_name + ' for Different phosphorous values')
     handles, labels = axs[0].get_legend_handles_labels()
 
-    legend = fig.legend(handles, labels, loc='outside upper center',
+    sorted_indices = sorted(
+        range(len(labels)), key=lambda i: extract_value(labels[i]))
+    legend = fig.legend([handles[i] for i in sorted_indices],
+                        [labels[i] for i in sorted_indices],
+                        loc='outside upper center',
                         bbox_to_anchor=box_psition_dE_body,
                         fancybox=True, shadow=False, ncol=1,
                         title='Water exchange rate')
+    legend.get_title().set_ha('center')
     # plt.setp(legend.get_title(),  multialignment='left', rotation=90)
 
     # Adjust layout for better readability
@@ -1956,7 +2071,7 @@ if plot_zm_body:
 
     # p_values = [0.01, 0.03, 0.05, 0.07]
     Z_values = list(
-        np.append(np.round(np.arange(0.5, 3, 0.25), 2), 0))
+        np.append(np.round(np.arange(0.25, 3, 0.25), 2), 0.0))
     colors = cm.GnBu(np.linspace(0.3, 1, len(Z_values)))
 
     fig, axs = plt.subplots(1, 2, figsize=FigsizeSome)
@@ -2027,47 +2142,92 @@ if plot_zm_body:
 
         variables = ['Body burden of yellow perch',
                      'Body burden of walleye']
+        color_index = Z_values.index(z_m) % len(colors)
+        for j, var in enumerate(solution_values):
 
-        for i, var in enumerate(solution_values):
-            axs[i].set_ylabel(variables[i])
-            color_index = Z_values.index(z_m) % len(colors)
+            axs[j].yaxis.set_major_formatter(y_formatter)
 
-            if z_m != 0:
-                line, = axs[i].plot(model_CyB.t, var, color=colors[color_index],
-                                    label=f"{z_m} m")
+            axs[j].tick_params(axis='y', labelsize=FONTSIZE,
+                               pad=0.5)
+            axs[j].tick_params(axis='x', labelsize=FONTSIZE,
+                               pad=0.5)
+            for spine in axs[j].spines.values():
+                spine.set_color('black')  # Set all spines color to black
+            axs[j].tick_params(axis='both', which='both', bottom=True, top=False,
+                               left=True, right=False, direction='out',
+                               length=tick_len, width=0.7, colors='black')
 
-            elif z_m == 0:
-                line, = axs[i].plot(model_CyB.t, var, color=BASE_COLORS,
-                                    label=f"{z_m} m (base)")
+            if variables[j] == "CyB":
+                var = B_values
+                axs[j].set_ylabel(f"mgC/L {variables[j]}",
+                                  fontsize=FONTSIZE)
+            else:
+                axs[j].set_ylabel(variables[j],
+                                  fontsize=FONTSIZE)
 
-            if fill:
-                axs[i].fill_between(model_CyB.t, var, var.min(),
-                                    color=colors[color_index], alpha=0.05)
+            max_values[j] = max(
+                max_values[j], var[TIMEStap[0]:TIMEStap[1]].max())
+            min_values[j] = min(
+                min_values[j], var[TIMEStap[0]:TIMEStap[1]].min())
+            # axs[j].set_ylim(min_values[j]*(1-0.05), max_values[j]*(1+0.1))
+            # axs[j].set_xlim(model_CyB.t[TIMEStap[0]:TIMEStap[1]].min(),
+            #                 model_CyB.t[TIMEStap[0]:TIMEStap[1]].max())
+            # axs[j].yaxis.set_major_formatter(y_formatter)
 
-            # all_handles.append(line)
-            # all_labels.append(f"P(0)={p}")
-            max_values[i] = max(max_values[i], var.max())
-            min_values[i] = min(min_values[i], var.min())
-            x_ticks = axs[i].xaxis.get_ticklocs()
-            if len(dates) > len(x_ticks):
-                x_labels = [DATES[int(x_val)] for x_val in x_ticks[:-1]]
-                axs[i].xaxis.set_ticklabels(x_labels,
-                                            rotation=30)
+            axs[j].xaxis.set_major_locator(
+                MaxNLocator(integer=True, nbins=NoBins))
+
+            x_ticks = axs[j].xaxis.get_ticklocs()
+
+            # x_ticks = np.array([i*60 for i in range(int(365/60))])
+
+            if len(dates) >= len(x_ticks):
+                max_tick = x_ticks.max()
+                No_days = len(DATES)
+                # x_labels_dates = [DATES[int((x_val/max_tick)*364)]
+                #             for x_val in x_ticks[:: SpaceDates ]]
+
+                x_labels = [''] * len(x_ticks)
+
+                # x_labels[::SpaceDates] = [DATES[int((x_val/max_tick)*No_days)]
+                #                           for x_val in x_ticks[:: SpaceDates]]
+                x_labels[::SpaceDates] = [dates[int(x_val)][5:]
+                                          for x_val in x_ticks[:: SpaceDates]]
+                axs[j].set_xticks(x_ticks)
+
+                axs[j].xaxis.set_ticklabels(x_labels,
+                                            rotation=90,
+                                            fontsize=FONTSIZE)
+
+                # Adjust the length of ticks with labels
+                for tick in axs[j].xaxis.get_major_ticks():
+                    if tick.label1.get_text():  # Check if tick has a label
+                        tick.tick1line.set_markersize(tick_len)
+                        # tick.tick2line.set_markersize(tick_len)
+                    else:
+                        tick.tick1line.set_markersize(other_tick_len)
+                        # tick.tick2line.set_markersize(other_tick_len)
+
             else:
                 x_labels = dates
-                axs[i].xaxis.set_ticklabels(x_labels,
-                                            rotation=30)
-            axs[i].set_xlabel('')
-            # axs[i].set_ylim(min_values[i], max_values[i]*(1+0.05))
-            # axs[i].set_xlim(model_CyB.t.min(), model_CyB.t.max())
-            axs[i].yaxis.set_major_formatter(y_formatter)
-            for spine in axs[i].spines.values():
-                spine.set_color('black')  # Set all spines color to black
-            axs[i].tick_params(axis='both', which='both', bottom=True, top=True,
-                               left=True, right=True, direction='in', length=4, width=1, colors='black')
-            # axs[i].legend(loc='upper right', bbox_to_anchor=(1.0, 1.0))
-            # axs[i].legend()
-            # axs[i].grid(True)
+                axs[j].xaxis.set_ticklabels(x_labels,
+                                            rotation=90,
+                                            fontsize=FONTSIZE)
+            axs[j].set_xlabel('Time (MM-DD)', fontsize=FONTSIZE,
+                              labelpad=2)
+            axs[j].grid(False)
+
+            if z_m != 0:
+                line, = axs[j].plot(model_CyB.t, var, color=colors[color_index],
+                                    label=f"+{z_m:.2f} m", linewidth=LINEWIDTH)
+
+            elif z_m == 0:
+                line, = axs[j].plot(model_CyB.t, var, color=BASE_COLORS,
+                                    label=f"+{z_m:.2f} m (base)", linewidth=LINEWIDTH)
+
+            if fill:
+                axs[j].fill_between(model_CyB.t, var, var.min(),
+                                    color=colors[color_index], alpha=0.05)
 
     # axs[0].axhline(y=10, color=LINE_COLOR, linestyle='dotted')
     # Set common x-axis label and title
@@ -2076,10 +2236,15 @@ if plot_zm_body:
         plt.suptitle(lake_name + ' for Different phosphorous values')
     handles, labels = axs[0].get_legend_handles_labels()
 
-    legend = fig.legend(handles, labels, loc='outside upper center',
+    sorted_indices = sorted(
+        range(len(labels)), key=lambda i: extract_value(labels[i]))
+    legend = fig.legend([handles[i] for i in sorted_indices],
+                        [labels[i] for i in sorted_indices],
+                        loc='outside upper center',
                         bbox_to_anchor=box_psition_zm_body,
                         fancybox=True, shadow=False, ncol=1,
-                        title='Increase \n depth of epilimnion')
+                        title='Epilimnion depth\n comparison with\n the base depth')
+    legend.get_title().set_ha('center')
     # plt.setp(legend.get_title(),  multialignment='left', rotation=90)
 
     # Adjust layout for better readability
@@ -2117,7 +2282,7 @@ if plot_kbg_body:
     max_values = [0, 0, 0, 0]
     min_values = [10, 10, 10, 10]
     for i, b in enumerate(zmKb_values):
-        model_CyB.params['z_mK_bg'] = 7*b
+        model_CyB.params['z_mK_bg'] = b
 
         # modelCyB.max_temp = 25.9
         solution, info = model_CyB.solver()
@@ -2157,44 +2322,88 @@ if plot_kbg_body:
 
         variables = ['Body burden of yellow perch',
                      'Body burden of walleye']
-
+        color_index = i % len(colors)
         for j, var in enumerate(solution_values):
+
             axs[j].yaxis.set_major_formatter(y_formatter)
+
+            axs[j].tick_params(axis='y', labelsize=FONTSIZE,
+                               pad=0.5)
+            axs[j].tick_params(axis='x', labelsize=FONTSIZE,
+                               pad=0.5)
             for spine in axs[j].spines.values():
                 spine.set_color('black')  # Set all spines color to black
-            axs[j].tick_params(axis='both', which='both', bottom=True, top=True,
-                               left=True, right=True, direction='in', length=4, width=1, colors='black')
+            axs[j].tick_params(axis='both', which='both', bottom=True, top=False,
+                               left=True, right=False, direction='out',
+                               length=tick_len, width=0.7, colors='black')
+
             if variables[j] == "CyB":
                 var = B_values
-                axs[j].set_ylabel(f"mgC/L {variables[j]}")
+                axs[j].set_ylabel(f"mgC/L {variables[j]}",
+                                  fontsize=FONTSIZE)
             else:
-                axs[j].set_ylabel(variables[j])
+                axs[j].set_ylabel(variables[j],
+                                  fontsize=FONTSIZE)
 
-            max_values[j] = max(max_values[j], var.max())
-            min_values[j] = min(min_values[j], var.min())
-            # axs[j].set_ylim(min_values[j], max_values[j]*(1+0.05))
-            # axs[j].set_xlim(model_CyB.t.min(), model_CyB.t.max())
+            max_values[j] = max(
+                max_values[j], var[TIMEStap[0]:TIMEStap[1]].max())
+            min_values[j] = min(
+                min_values[j], var[TIMEStap[0]:TIMEStap[1]].min())
+            # axs[j].set_ylim(min_values[j]*(1-0.05), max_values[j]*(1+0.1))
+            # axs[j].set_xlim(model_CyB.t[TIMEStap[0]:TIMEStap[1]].min(),
+            #                 model_CyB.t[TIMEStap[0]:TIMEStap[1]].max())
             # axs[j].yaxis.set_major_formatter(y_formatter)
+
+            axs[j].xaxis.set_major_locator(
+                MaxNLocator(integer=True, nbins=NoBins))
+
             x_ticks = axs[j].xaxis.get_ticklocs()
-            if len(dates) > len(x_ticks):
-                x_labels = [DATES[int(x_val)] for x_val in x_ticks[:-1]]
+
+            # x_ticks = np.array([i*60 for i in range(int(365/60))])
+
+            if len(dates) >= len(x_ticks):
+                max_tick = x_ticks.max()
+                No_days = len(DATES)
+                # x_labels_dates = [DATES[int((x_val/max_tick)*364)]
+                #             for x_val in x_ticks[:: SpaceDates ]]
+
+                x_labels = [''] * len(x_ticks)
+
+                # x_labels[::SpaceDates] = [DATES[int((x_val/max_tick)*No_days)]
+                #                           for x_val in x_ticks[:: SpaceDates]]
+                x_labels[::SpaceDates] = [dates[int(x_val)][5:]
+                                          for x_val in x_ticks[:: SpaceDates]]
+                axs[j].set_xticks(x_ticks)
+
                 axs[j].xaxis.set_ticklabels(x_labels,
-                                            rotation=30)
+                                            rotation=90,
+                                            fontsize=FONTSIZE)
+
+                # Adjust the length of ticks with labels
+                for tick in axs[j].xaxis.get_major_ticks():
+                    if tick.label1.get_text():  # Check if tick has a label
+                        tick.tick1line.set_markersize(tick_len)
+                        # tick.tick2line.set_markersize(tick_len)
+                    else:
+                        tick.tick1line.set_markersize(other_tick_len)
+                        # tick.tick2line.set_markersize(other_tick_len)
+
             else:
                 x_labels = dates
                 axs[j].xaxis.set_ticklabels(x_labels,
-                                            rotation=30)
-            axs[j].set_xlabel('')
+                                            rotation=90,
+                                            fontsize=FONTSIZE)
+            axs[j].set_xlabel('Time (MM-DD)', fontsize=FONTSIZE,
+                              labelpad=2)
             axs[j].grid(False)
-            color_index = i % len(colors)
 
             if b != 0.3:
                 line, = axs[j].plot(model_CyB.t, var, color=colors[color_index],
-                                    label=f"{b} m")  # Collect lines for legend
+                                    label=f"{b:.2f} m", linewidth=LINEWIDTH)  # Collect lines for legend
 
             elif b == 0.3:
                 line, = axs[j].plot(model_CyB.t, var, color=BASE_COLORS,
-                                    label=f"{b} m (base)")
+                                    label=f"{b:.2f} m (base)", linewidth=LINEWIDTH)
 
             # legend_handles.append(line)  # Append line for legend
 
@@ -2202,10 +2411,15 @@ if plot_kbg_body:
 
     handles, labels = axs[0].get_legend_handles_labels()
     # box_psition = (0.98, 1.05)
-    legend = fig.legend(handles, labels, loc='outside upper center',
+    sorted_indices = sorted(
+        range(len(labels)), key=lambda i: extract_value(labels[i]))
+    legend = fig.legend([handles[i] for i in sorted_indices],
+                        [labels[i] for i in sorted_indices],
+                        loc='outside upper center',
                         bbox_to_anchor=box_psition_kbg_body,
                         fancybox=True, shadow=False, ncol=1,
                         title='Turbidity')
+    legend.get_title().set_ha('center')
     plt.tight_layout()
     if SAVE_PLOT:
         # Save plots
@@ -2233,14 +2447,15 @@ if plot_temp_peak_fish:
     # Temp_increase = [0, 0.1, 0.2, 0.3,
     # 0.4, 0.6, 0.7, 0.8]
 
-    Temp_increase = np.append(np.round(np.arange(0.2, 3.4+0.2, 0.2), 1), 0)
+    Temp_increase = np.append(np.round(np.arange(0.3, 3.4+0.3, 0.3), 1), 0)
     Temp_increase = list(Temp_increase)
 
     # colors = sns.color_palette(map_color, n_colors=len(Temp_increase))
     colors = cm.GnBu(np.linspace(0.3, 1, len(Temp_increase)))
     solution_Temp = {}
 
-    fig, axs = plt.subplots(1, 2, figsize=(14, 6))
+    fig, axs = plt.subplots(1, 2, figsize=FigsizeSome)
+
     axs = axs.ravel()
     # Change function of temperature
     max_values = [0, 0, 0, 0]
@@ -2290,77 +2505,98 @@ if plot_temp_peak_fish:
             v_A_values, v_D_values, v_Y_values, \
             v_W_values, O_values = solution.T
 
-        # # Maximum Toxin
-        # if Temp == 0:
-        #     x_0, x_1 = days_before_after_toxin(M_values, 10)
-        #     avar_0 = Avarage_max_peaks(
-        #         B_values, x_0, x_1, model_CyB)
-        #     print("Avar Base", avar_0, 'Temp:', Temp)
-        #     max_M_0 = M_values.max()
-
-        #     print("Maximum M base: ", max_M_0, 'Temp:', Temp)
-
-        # max_O = O_values[130*3:250*3].max()
-        # min_O = O_values[130*3:250*3].min()
-        # max_M = M_values.max()
-        # print('Oxigen reduction: ', (min_O-max_O)/max_O, 'Temp:', Temp)
-        # print("Maximum M Change: ", (max_M-max_M_0)/max_M_0, 'Temp:', Temp)
-        # # Print days of bloom toxine
-        # x_0, x_1 = days_before_after_toxin(M_values, 10)
-        # avar = Avarage_max_peaks(
-        #     B_values, x_0, x_1, model_CyB)
-        # print("Avarage CyB:", (avar-avar_0)/avar_0, 'Temp:', Temp)
-        # print('Days bloom Toxine:', x_0, 'to', x_1, 'Temp:', Temp)
-
         solution_values = [Y_values,
                            W_values]
 
         variables = ['Yellow perch ($mg C/L$)',
                      'Walleye ($mg C/L$)']
+        color_index = Temp_increase.index(Temp) % len(colors)
+        for j, var in enumerate(solution_values):
 
-        for i, var in enumerate(solution_values):
-            # var = solution.T[variables.index(variables[i])]
-            axs[i].set_ylabel(variables[i])
-            color_index = Temp_increase.index(Temp) % len(colors)
+            axs[j].yaxis.set_major_formatter(y_formatter)
 
-            if Temp != 0:
-                line, = axs[i].plot(model_CyB.t, var, color=colors[color_index],
-                                    label=f"{Temp} $\degree C$")
+            axs[j].tick_params(axis='y', labelsize=FONTSIZE,
+                               pad=0.5)
+            axs[j].tick_params(axis='x', labelsize=FONTSIZE,
+                               pad=0.5)
+            for spine in axs[j].spines.values():
+                spine.set_color('black')  # Set all spines color to black
+            axs[j].tick_params(axis='both', which='both', bottom=True, top=False,
+                               left=True, right=False, direction='out',
+                               length=tick_len, width=0.7, colors='black')
 
-            elif Temp == 0:
-                line, = axs[i].plot(model_CyB.t, var, color=BASE_COLORS,
-                                    label=f"{Temp} $\degree C$ (base)")
+            if variables[j] == "CyB":
+                var = B_values
+                axs[j].set_ylabel(f"mgC/L {variables[j]}",
+                                  fontsize=FONTSIZE)
+            else:
+                axs[j].set_ylabel(variables[j],
+                                  fontsize=FONTSIZE)
 
-            if fill:
-                axs[i].fill_between(model_CyB.t, var, var.min(),
-                                    color=colors[color_index], alpha=0.05)
+            max_values[j] = max(
+                max_values[j], var[TIMEStap[0]:TIMEStap[1]].max())
+            min_values[j] = min(
+                min_values[j], var[TIMEStap[0]:TIMEStap[1]].min())
+            # axs[j].set_ylim(min_values[j]*(1-0.05), max_values[j]*(1+0.1))
+            # axs[j].set_xlim(model_CyB.t[TIMEStap[0]:TIMEStap[1]].min(),
+            #                 model_CyB.t[TIMEStap[0]:TIMEStap[1]].max())
+            # axs[j].yaxis.set_major_formatter(y_formatter)
 
-            # all_handles.append(line)
-            # all_labels.append(f"P(0)={p}")
-            x_ticks = axs[i].xaxis.get_ticklocs()
-            if len(dates) > len(x_ticks):
-                x_labels = [DATES[int(x_val)] for x_val in x_ticks[:-1]]
-                axs[i].xaxis.set_ticklabels(x_labels,
-                                            rotation=30)
+            axs[j].xaxis.set_major_locator(
+                MaxNLocator(integer=True, nbins=NoBins))
+
+            x_ticks = axs[j].xaxis.get_ticklocs()
+
+            # x_ticks = np.array([i*60 for i in range(int(365/60))])
+
+            if len(dates) >= len(x_ticks):
+                max_tick = x_ticks.max()
+                No_days = len(DATES)
+                # x_labels_dates = [DATES[int((x_val/max_tick)*364)]
+                #             for x_val in x_ticks[:: SpaceDates ]]
+
+                x_labels = [''] * len(x_ticks)
+
+                # x_labels[::SpaceDates] = [DATES[int((x_val/max_tick)*No_days)]
+                #                           for x_val in x_ticks[:: SpaceDates]]
+                x_labels[::SpaceDates] = [dates[int(x_val)][5:]
+                                          for x_val in x_ticks[:: SpaceDates]]
+                axs[j].set_xticks(x_ticks)
+
+                axs[j].xaxis.set_ticklabels(x_labels,
+                                            rotation=90,
+                                            fontsize=FONTSIZE)
+
+                # Adjust the length of ticks with labels
+                for tick in axs[j].xaxis.get_major_ticks():
+                    if tick.label1.get_text():  # Check if tick has a label
+                        tick.tick1line.set_markersize(tick_len)
+                        # tick.tick2line.set_markersize(tick_len)
+                    else:
+                        tick.tick1line.set_markersize(other_tick_len)
+                        # tick.tick2line.set_markersize(other_tick_len)
+
             else:
                 x_labels = dates
-                axs[i].xaxis.set_ticklabels(x_labels,
-                                            rotation=30)
-            axs[i].set_xlabel('')
-            max_values[i] = max(max_values[i], var.max())
-            min_values[i] = min(min_values[i], var.min())
+                axs[j].xaxis.set_ticklabels(x_labels,
+                                            rotation=90,
+                                            fontsize=FONTSIZE)
+            axs[j].set_xlabel('Time (MM-DD)', fontsize=FONTSIZE,
+                              labelpad=2)
+            axs[j].grid(False)
 
-            # axs[i].set_ylim(min_values[i], max_values[i] * (1+0.05))
-            # axs[i].set_xlim(model_CyB.t.min(), model_CyB.t.max())
-            axs[i].yaxis.set_major_formatter(y_formatter)
-            for spine in axs[i].spines.values():
-                spine.set_color('black')  # Set all spines color to black
-            axs[i].tick_params(axis='both', which='both', bottom=True, top=True,
-                               left=True, right=True, direction='in', length=4, width=1, colors='black')
+            if Temp != 0:
+                line, = axs[j].plot(model_CyB.t, var, color=colors[color_index],
+                                    label=f"+{Temp:.2f}", linewidth=LINEWIDTH)
 
-            # axs[i].legend(loc='upper right', bbox_to_anchor=(1.0, 1.0))
-            # axs[i].legend()
-            # axs[i].grid(True)
+            elif Temp == 0:
+                line, = axs[j].plot(model_CyB.t, var, color=BASE_COLORS,
+                                    label=f"+{Temp:.2f} (base)", linewidth=LINEWIDTH)
+
+            if fill:
+                axs[j].fill_between(model_CyB.t, var, var.min(),
+                                    color=colors[color_index], alpha=0.05)
+
     # Set common x-axis label and title
     # axs[-1].set_xlabel('Time (days)')
     if WithTitle:
@@ -2376,11 +2612,16 @@ if plot_temp_peak_fish:
     else:
         handles, labels = axs[0].get_legend_handles_labels()
         # box_psition = (0.96, 0.88)
-        legend = fig.legend(handles, labels, loc='outside upper center',
+        sorted_indices = sorted(
+            range(len(labels)), key=lambda i: extract_value(labels[i]))
+        legend = fig.legend([handles[i] for i in sorted_indices],
+                            [labels[i] for i in sorted_indices],
+                            loc='outside upper center',
                             bbox_to_anchor=box_psition_fish,
                             fancybox=True, shadow=False, ncol=1,
-                            title='Increased Temp')
+                            title='Increase\n in $\degree C$')
 
+        legend.get_title().set_ha('center')
     plt.tight_layout()
     if SAVE_PLOT:
         # Save plots
@@ -2476,11 +2717,11 @@ if plot_phosphorus_fish:
 
             if p != P_0:
                 line, = axs[i].plot(model_CyB.t, var, color=colors[color_index],
-                                    label=f"{p} mgP/L")  # Collect lines for legend
+                                    label=f"{p:.2f} mgP/L", linewidth=LINEWIDTH)  # Collect lines for legend
 
             elif p == P_0:
                 line, = axs[i].plot(model_CyB.t, var, color=BASE_COLORS,
-                                    label=f"{p} mgP/L (base)")
+                                    label=f"{p:.2f} mgP/L (base)", linewidth=LINEWIDTH)
 
             if fill:
                 axs[i].fill_between(model_CyB.t, var, var.min(),
@@ -2526,6 +2767,7 @@ if plot_phosphorus_fish:
     # plt.setp(legend.get_title(),  multialignment='left', rotation=90)
 
     # Adjust layout for better readability
+    legend.get_title().set_ha('center')
     plt.tight_layout()
     if SAVE_PLOT:
         # Save plots
@@ -2628,11 +2870,11 @@ if plot_dE_fish:
 
             if d_E != 0.02:
                 line, = axs[i].plot(model_CyB.t, var, color=colors[color_index],
-                                    label=f"{d_E} m/day")
+                                    label=f"{d_E:.2f} m/day", linewidth=LINEWIDTH)
 
             elif d_E == 0.02:
                 line, = axs[i].plot(model_CyB.t, var, color=BASE_COLORS,
-                                    label=f"{d_E} m/day (base)")
+                                    label=f"{d_E:.2f} m/day (base)", linewidth=LINEWIDTH)
 
             if fill:
                 axs[i].fill_between(model_CyB.t, var, var.min(),
@@ -2677,6 +2919,7 @@ if plot_dE_fish:
                         title='Water exchange rate')
     # plt.setp(legend.get_title(),  multialignment='left', rotation=90)
 
+    legend.get_title().set_ha('center')
     # Adjust layout for better readability
     plt.tight_layout()
     if SAVE_PLOT:
@@ -2776,11 +3019,11 @@ if plot_zm_fish:
 
             if z_m != 0:
                 line, = axs[i].plot(model_CyB.t, var, color=colors[color_index],
-                                    label=f"{z_m} m")
+                                    label=f"{z_m:.2f} m", linewidth=LINEWIDTH)
 
             elif z_m == 0:
                 line, = axs[i].plot(model_CyB.t, var, color=BASE_COLORS,
-                                    label=f"{z_m} m (base)")
+                                    label=f"{z_m:.2f} m (base)", linewidth=LINEWIDTH)
 
             if fill:
                 axs[i].fill_between(model_CyB.t, var, var.min(),
@@ -2823,7 +3066,7 @@ if plot_zm_fish:
                         fancybox=True, shadow=False, ncol=1,
                         title='Increase \n depth of epilimnion')
     # plt.setp(legend.get_title(),  multialignment='left', rotation=90)
-
+    legend.get_title().set_ha('center')
     # Adjust layout for better readability
     plt.tight_layout()
     if SAVE_PLOT:
@@ -2932,11 +3175,11 @@ if plot_kbg_fish:
 
             if b != 0.3:
                 line, = axs[j].plot(model_CyB.t, var, color=colors[color_index],
-                                    label=f"{b} m")  # Collect lines for legend
+                                    label=f"{b:.2f} m", linewidth=LINEWIDTH)  # Collect lines for legend
 
             elif b == 0.3:
                 line, = axs[j].plot(model_CyB.t, var, color=BASE_COLORS,
-                                    label=f"{b} m (base)")
+                                    label=f"{b:.2f} m (base)", linewidth=LINEWIDTH)
 
             # legend_handles.append(line)  # Append line for legend
 
@@ -2948,6 +3191,7 @@ if plot_kbg_fish:
                         bbox_to_anchor=box_psition_kbg_fish,
                         fancybox=True, shadow=False, ncol=1,
                         title='Turbidity')
+    legend.get_title().set_ha('center')
     plt.tight_layout()
     if SAVE_PLOT:
         # Save plots
