@@ -45,7 +45,7 @@ model_CyB.toxines = True
 data = pd.read_csv(
     "merged_water_quality_data.csv", low_memory=False)
 
-lake_name = "PIGEON LAKE"
+lake_name = "PINE LAKE"
 
 # labels = ['MICROCYSTIN, TOTAL',
 #           'PHOSPHORUS TOTAL DISSOLVED',
@@ -57,8 +57,8 @@ labels = ['MICROCYSTIN, TOTAL',
           'Total cyanobacterial cell count (cells/mL)']
 
 
-years = ['2018', '2019', '2020', '2021', '2022', '2023']
-years = ['2022']
+# years = ['2018', '2019', '2020', '2021', '2022', '2023']
+years = ['2017']
 yearname = ''
 for year in years:
     yearname = yearname + str(year) + '_'
