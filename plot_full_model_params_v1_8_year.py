@@ -17,15 +17,104 @@ A_0 = 0.05
 B_0 = 0.004  # 0.004
 Q_B_0 = 0.01
 Q_A_0 = 0.01
-P_0 = 0.05  # 10
+# P_0 = 0.4  # 0.075  # 10
 D_0 = 0.0239  # 0.0239
 Y_0 = 0.025*10
 W_0 = 0.0025*10
-O_0 = 5
+# O_0 = 5
 v_A_0 = 0
 v_D_0 = 0
 v_Y_0 = 0
 v_W_0 = 0
+
+
+# Data
+LakeYear = {'PIGEON LAKE': ['2021'],
+            'PINE LAKE': ['2017'],
+            'MONONA LAKE': ['2015'],
+            'MENDOTA LAKE': ['2018']}
+
+
+lake_name = "PINE LAKE"
+
+
+years = LakeYear[lake_name]
+
+yearname = ''
+for year in years:
+    yearname = yearname + str(year) + '_'
+
+if lake_name == 'PIGEON LAKE' and years[-1] == '2021':
+    coment = "_v6_3Var_"
+else:
+    coment = "_v6_3Var_" + yearname
+
+
+if years[-1] == '2018' and lake_name == 'MENDOTA LAKE':
+    data = pd.read_csv(
+        "Dataset_US.csv", low_memory=False)
+
+    labels = ['Microcystin (nM)',
+              'OXYGEN DISSOLVED (FIELD METER)',
+              'Total cyanobacterial cell count (cells/mL)']
+elif lake_name == 'MONONA LAKE':
+
+    data = pd.read_csv(
+        "Combined_Data_for_MO_Merged.csv", low_memory=False)
+
+    labels = ['OXYGEN DISSOLVED (FIELD METER)',
+              'Total cyanobacterial cell count (cells/mL)',
+              'TEMPERATURE WATER']
+
+elif lake_name in ['PIGEON LAKE', 'PINE LAKE']:
+    data = pd.read_csv(
+        "merged_water_quality_data.csv", low_memory=False)
+
+    labels = ['MICROCYSTIN, TOTAL',
+              'PHOSPHORUS TOTAL DISSOLVED',
+              'OXYGEN DISSOLVED (FIELD METER)',
+              'Total cyanobacterial cell count (cells/mL)',
+              'TEMPERATURE WATER']
+
+data_fit = extractData(data, years, labels, lake_name)
+
+# # import parameters
+
+if lake_name in ['MONONA LAKE']:
+    rectTemp = 3.0
+    B_scale = 0.1
+    A_scale = 100
+    D_scale = 0.1
+    P_0 = 0.01
+    P_in = 0.01
+    O_0 = 5
+
+elif lake_name in ['MENDOTA LAKE']:
+    rectTemp = 3.0
+    B_scale = 0.1
+    A_scale = 10
+    D_scale = 10
+    P_0 = 0.075
+    P_in = 0.015
+    O_0 = 5
+
+elif lake_name in ['PIGEON LAKE']:
+    rectTemp = 0.0
+    B_scale = 1
+    A_scale = 1
+    D_scale = 1
+    P_0 = 0.05
+    P_in = 0.01
+    O_0 = 6
+
+elif lake_name in ['PINE LAKE']:
+    rectTemp = -2.75
+    B_scale = 1.0
+    A_scale = 2.0
+    D_scale = 0.1
+    P_0 = 0.4
+    P_in = 0.2
+    O_0 = 5
 
 
 model_CyB = fullmodel_v1_8.modelCyB()
@@ -39,54 +128,14 @@ initial_conditions = [M_0, B_0, A_0,
                       v_Y_0, v_W_0, O_0]
 
 
-# Data
-data = pd.read_csv(
-    "merged_water_quality_data.csv", low_memory=False)
-
-
-# data = pd.read_csv(
-#     "Dataset_US.csv", low_memory=False)
-
-
-#  # "PINE LAKE"  # "PIGEON LAKE" # MENDOTA LAKE
-lake_name = "PIGEON LAKE"
-
-
-labels = ['MICROCYSTIN, TOTAL',
-          'PHOSPHORUS TOTAL DISSOLVED',
-          'OXYGEN DISSOLVED (FIELD METER)',
-          'Total cyanobacterial cell count (cells/mL)',
-          'TEMPERATURE WATER']
-
-# labels = ['Microcystin (nM)',
-#           'OXYGEN DISSOLVED (FIELD METER)',
-#           'Total cyanobacterial cell count (cells/mL)']
-
-
-# years = ['2018', '2019', '2020', '2021', '2022', '2023']
-years = ['2021']  # ['2017']  # ['2019']  # ['2021']
-
-yearname = ''
-for year in years:
-    yearname = yearname + str(year) + '_'
-
-if lake_name == 'PIGEON LAKE' and years[-1] == '2021':
-    coment = "_v6_3Var_"
-else:
-    coment = "_v6_3Var_" + yearname
-
-data_fit = extractData(data, years, labels, lake_name)
-
-# # import parameters
-
-
 def read_params():
     model_CyB = fullmodel_v1_8.modelCyB()
     model_CyB.initial = initial_conditions
+    name_data_param = "fitting_parameters_full_variables_v1"
     name_data = './FittedParameters/' + \
         'fitting_parameters_full_variables_v2'+lake_name + coment + '_final' + ".csv"
     # name_data = './FittedParameters/' + \
-    #     "fitting_parameters_full_variables_v12021Pigeon Lake_v2__final.csv"
+    #     'fitting_parameters_full_variables_v2CHESTERMERE LAKE_v4_3Var__backup.csv'
     params_fit = pd.read_csv(name_data)
 
     # params_fit = pd.read_csv(
@@ -94,16 +143,24 @@ def read_params():
     unknow_params = ["alpha_D", "alpha_Y",
                      "tau_D", "tau_Y",
                      "a_A",
-                     "sigma_A", "sigma_D",
+                     "sigma_A",
                      "x_A"]
 
-    model_CyB.initial[1] = params_fit["B_0"][0]
-    model_CyB.initial[2] = params_fit["A_0"][0]
-    model_CyB.initial[6] = params_fit["D_0"][0]
+    model_CyB.initial[1] = params_fit["B_0"][0]*B_scale
+    # print('B(0)=', model_CyB.initial[1])
+    model_CyB.initial[2] = params_fit["A_0"][0]*A_scale
+    # print('A(0)=', model_CyB.initial[2])
+    model_CyB.initial[6] = params_fit["D_0"][0]*D_scale
+    # print('D(0)=', model_CyB.initial[6])
 
     for name in unknow_params:
         model_CyB.params[name] = params_fit[name][0]
 
+    # Death Daphnia
+
+    # 0.015  # 0.03 Pigeon lake  # 0.09601  # 0.125
+    model_CyB.params['p_in'] = P_in
+    # model_CyB.params["delta_B-"] = 2.4
     # With Toxine
     model_CyB.toxines = True and (model_CyB.initial[1] > 0)
     # New time scale
@@ -126,7 +183,7 @@ def read_params():
     TempZmData['Date'] = pd.to_datetime(
         TempZmData['Date'], format='mixed')
 
-    tempSamp = TempZmData['lake_mix_layer_temperature']
+    tempSamp = TempZmData['lake_mix_layer_temperature']-rectTemp
     Zmsample = (TempZmData['lake_mix_layer_depth_min'] +
                 TempZmData['lake_mix_layer_depth_max'])*0.5
     days = TempZmData['Date'].dt.day_of_year
@@ -136,7 +193,6 @@ def read_params():
     model_CyB.get_interpTemp(tempSamp, days)
     model_CyB.get_interpZm(Zmsample, days)
     return model_CyB
-
 # Fit parameters
 
 
@@ -209,7 +265,7 @@ FigsizeAll = (11 / 2.54, 11 / 2.54)
 # FigsizeSome = (7.5 / 2.54, 10.5 / 2.54)
 FigsizeSome = (17.8 / 2.54, 10.5 / 2.54)
 FORMAT = '.pdf'
-FONTSIZE = 7
+FONTSIZE = 9  # 14 Two Figures  # 7 Several plots
 RESOLUTION = 800
 NoBins = 25
 SpaceDates = 2  # Space between dates to be plotted base on NoBins
@@ -221,28 +277,28 @@ tick_len = 4  # Length for ticks with labels
 other_tick_len = 2  # Length for other ticks
 hspace = 0.35
 wspace = 0.6
-FONTSIZETITLE = 8
+FONTSIZETITLE = 7  # 13  # Several Plots
 LegendWidth = 2
 LINEWIDTH = 0.75
 # Which Plot
-plot_zmKb = True  # Using
+plot_zmKb = False  # Using
 box_psition_zmKb = (1.065, 0.98)
-plot_z_m = True  # Using
+plot_z_m = False  # Using
 box_psition_z_m = (1.095, 0.98)
-plot_d_E = True  # Using
+plot_d_E = False  # Using
 box_psition_d_E = (1.115, 0.98)
 plot_phos = True  # Using
 box_psition_phos = (1.115, 0.98)
 # Different Temperatures peaks
-plot_temp_peak = True  # Using
-box_psition_temp_peak = (1.095, 0.99)
+plot_temp_peak = False  # Using
+box_psition_temp_peak = (1.095, 0.98)
 
 
 ############ body burning ######################
 
 # bodyburnig and increace temp in peaks
-plot_temp_peak_body = True  # Using
-box_psition_body = (1.095, 0.92)
+plot_temp_peak_body = False  # Using
+box_psition_body = (1.095, 0.98)
 
 # bodyburnig and increace temp in phosphorus
 plot_phosphorus_body = False
@@ -251,7 +307,7 @@ box_psition_phosphorus_body = (1.115, 0.98)
 plot_dE_body = False
 box_psition_dE_body = (1.115, 0.98)
 # bodyburnig and increace temp in zm
-plot_zm_body = True  # Using
+plot_zm_body = False  # Using
 box_psition_zm_body = (1.115, 0.98)
 # bodyburnig and increace temp in zmKb
 plot_kbg_body = False
@@ -259,8 +315,11 @@ box_psition_kbg_body = (1.115, 0.98)
 
 ############# Fishes ####################
 # bodyburnig and increace temp in peaks
-plot_temp_peak_fish = True  # Using
+plot_temp_peak_fish = False  # Using
 box_psition_fish = (1.095, 0.98)
+
+plot_temp_peak_fish_body = False  # Using
+box_psition_fish_body = (1.095, 0.98)
 
 # bodyburnig and increace temp in phosphorus
 plot_phosphorus_fish = False
@@ -422,10 +481,10 @@ if plot_zmKb:
             if variables[j] == "CyB":
                 var = B_values
                 axs[j].set_ylabel(f"mgC/L {variables[j]}",
-                                  fontsize=FONTSIZE)
+                                  fontsize=FONTSIZETITLE)
             else:
                 axs[j].set_ylabel(variables[j],
-                                  fontsize=FONTSIZE)
+                                  fontsize=FONTSIZETITLE)
 
             max_values[j] = max(
                 max_values[j], var[TIMEStap[0]:TIMEStap[1]].max())
@@ -475,7 +534,7 @@ if plot_zmKb:
                 axs[j].xaxis.set_ticklabels(x_labels,
                                             rotation=90,
                                             fontsize=FONTSIZE)
-            axs[j].set_xlabel('Time (MM-DD)', fontsize=FONTSIZE,
+            axs[j].set_xlabel('Time (MM-DD)', fontsize=FONTSIZETITLE,
                               labelpad=2)
             axs[j].grid(False)
             color_index = i % len(colors)
@@ -509,7 +568,7 @@ if plot_zmKb:
     legend = fig.legend(handles[:-1], labels, loc='outside upper center',
                         bbox_to_anchor=box_psition_zmKb,
                         fancybox=True, shadow=False, ncol=1,
-                        title='Turbidity', fontsize=FONTSIZE)
+                        title='Turbidity', fontsize=FONTSIZETITLE)
     legend.get_title().set_ha('center')
     plt.tight_layout()
     if SAVE_PLOT:
@@ -662,10 +721,10 @@ if plot_z_m:
             if variables[j] == "CyB":
                 var = B_values
                 axs[j].set_ylabel(f"mgC/L {variables[j]}",
-                                  fontsize=FONTSIZE)
+                                  fontsize=FONTSIZETITLE-1)
             else:
                 axs[j].set_ylabel(variables[j],
-                                  fontsize=FONTSIZE)
+                                  fontsize=FONTSIZETITLE)
 
             max_values[j] = max(
                 max_values[j], var[TIMEStap[0]:TIMEStap[1]].max())
@@ -715,7 +774,7 @@ if plot_z_m:
                 axs[j].xaxis.set_ticklabels(x_labels,
                                             rotation=90,
                                             fontsize=FONTSIZE)
-            axs[j].set_xlabel('Time (MM-DD)', fontsize=FONTSIZE,
+            axs[j].set_xlabel('Time (MM-DD)', fontsize=FONTSIZETITLE,
                               labelpad=2)
             axs[j].grid(False)
             # color_index = j % len(colors)
@@ -902,10 +961,10 @@ if plot_d_E:
             if variables[j] == "CyB":
                 var = B_values
                 axs[j].set_ylabel(f"mgC/L {variables[j]}",
-                                  fontsize=FONTSIZE)
+                                  fontsize=FONTSIZETITLE-1)
             else:
                 axs[j].set_ylabel(variables[j],
-                                  fontsize=FONTSIZE)
+                                  fontsize=FONTSIZETITLE)
 
             max_values[j] = max(
                 max_values[j], var[TIMEStap[0]:TIMEStap[1]].max())
@@ -955,7 +1014,7 @@ if plot_d_E:
                 axs[j].xaxis.set_ticklabels(x_labels,
                                             rotation=90,
                                             fontsize=FONTSIZE)
-            axs[j].set_xlabel('Time (MM-DD)', fontsize=FONTSIZE,
+            axs[j].set_xlabel('Time (MM-DD)', fontsize=FONTSIZETITLE,
                               labelpad=2)
             axs[j].grid(False)
 
@@ -1011,8 +1070,17 @@ if plot_phos:
     y_formatter.orderOfMagnitude = 4  # Set the exponent to 4
 
     # p_values = [0.01, 0.03, 0.05, 0.07]
-    p_values = [0.01, 0.02, 0.03, 0.04, 0.06, 0.07, 0.1, 0.2,
-                0.3, 0.4, P_0]
+    # p_values = [0.01, 0.02, 0.03, 0.04, 0.06, 0.07, 0.1, 0.2,
+    #             0.3, 0.4, P_0]
+    # Original list
+    p_values = [0.01, 0.02, 0.03, 0.04, 0.06, 0.07, 0.1, 0.2, 0.3, 0.4, P_0]
+
+    # Remove duplicates while preserving order, except for P_0
+    p_values0 = [item for item in p_values if item != P_0]
+
+    # Add P_0 at the end
+    p_values0.append(P_0)
+    p_values = p_values0
     # p_values = [0.1, 0.2, 0.3, 0.4]
     # p_values = [0.5, 0.6, 0.7, 0.8]
 
@@ -1131,10 +1199,10 @@ if plot_phos:
             if variables[j] == "CyB":
                 var = B_values
                 axs[j].set_ylabel(f"mgC/L {variables[j]}",
-                                  fontsize=FONTSIZE)
+                                  fontsize=FONTSIZETITLE-1)
             else:
                 axs[j].set_ylabel(variables[j],
-                                  fontsize=FONTSIZE)
+                                  fontsize=FONTSIZETITLE)
 
             max_values[j] = max(
                 max_values[j], var[TIMEStap[0]:TIMEStap[1]].max())
@@ -1184,7 +1252,7 @@ if plot_phos:
                 axs[j].xaxis.set_ticklabels(x_labels,
                                             rotation=90,
                                             fontsize=FONTSIZE)
-            axs[j].set_xlabel('Time (MM-DD)', fontsize=FONTSIZE,
+            axs[j].set_xlabel('Time (MM-DD)', fontsize=FONTSIZETITLE,
                               labelpad=2)
             axs[j].grid(False)
 
@@ -1346,7 +1414,7 @@ if plot_temp_peak:
                                left=True, right=False, direction='out',
                                length=tick_len, width=0.7, colors='black')
 
-            axs[i].set_ylabel(variables[i], fontsize=FONTSIZE,
+            axs[i].set_ylabel(variables[i], fontsize=FONTSIZETITLE,
                               labelpad=0)
 
             max_values[i] = max(
@@ -1393,7 +1461,7 @@ if plot_temp_peak:
                 x_labels = dates
                 axs[i].xaxis.set_ticklabels(x_labels,
                                             rotation=30)
-            axs[i].set_xlabel('Time (MM-DD)', fontsize=FONTSIZE,
+            axs[i].set_xlabel('Time (MM-DD)', fontsize=FONTSIZETITLE,
                               labelpad=2)
             axs[i].grid(False)
             color_index = Temp_increase.index(Temp) % len(colors)
@@ -1438,7 +1506,6 @@ if plot_temp_peak:
 
 
 # Different Temperatures peaks bodyborning
-
 
 if plot_temp_peak_body:
     # Set the y-axis formatter to use scientific notation
@@ -1585,7 +1652,7 @@ if plot_temp_peak_body:
                                left=True, right=False, direction='out',
                                length=tick_len, width=0.7, colors='black')
 
-            axs[i].set_ylabel(variables[i], fontsize=FONTSIZE,
+            axs[i].set_ylabel(variables[i], fontsize=FONTSIZETITLE,
                               labelpad=0)
 
             max_values[i] = max(
@@ -1632,7 +1699,7 @@ if plot_temp_peak_body:
                 x_labels = dates
                 axs[i].xaxis.set_ticklabels(x_labels,
                                             rotation=30)
-            axs[i].set_xlabel('Time (MM-DD)', fontsize=FONTSIZE,
+            axs[i].set_xlabel('Time (MM-DD)', fontsize=FONTSIZETITLE,
                               labelpad=2)
             axs[i].grid(False)
             color_index = Temp_increase.index(Temp) % len(colors)
@@ -1761,10 +1828,10 @@ if plot_phosphorus_body:
             if variables[j] == "CyB":
                 var = B_values
                 axs[j].set_ylabel(f"mgC/L {variables[j]}",
-                                  fontsize=FONTSIZE)
+                                  fontsize=FONTSIZETITLE-1)
             else:
                 axs[j].set_ylabel(variables[j],
-                                  fontsize=FONTSIZE)
+                                  fontsize=FONTSIZETITLE)
 
             max_values[j] = max(
                 max_values[j], var[TIMEStap[0]:TIMEStap[1]].max())
@@ -1814,7 +1881,7 @@ if plot_phosphorus_body:
                 axs[j].xaxis.set_ticklabels(x_labels,
                                             rotation=90,
                                             fontsize=FONTSIZE)
-            axs[j].set_xlabel('Time (MM-DD)', fontsize=FONTSIZE,
+            axs[j].set_xlabel('Time (MM-DD)', fontsize=FONTSIZETITLE,
                               labelpad=2)
             axs[j].grid(False)
 
@@ -1962,10 +2029,10 @@ if plot_dE_body:
             if variables[j] == "CyB":
                 var = B_values
                 axs[j].set_ylabel(f"mgC/L {variables[j]}",
-                                  fontsize=FONTSIZE)
+                                  fontsize=FONTSIZETITLE-1)
             else:
                 axs[j].set_ylabel(variables[j],
-                                  fontsize=FONTSIZE)
+                                  fontsize=FONTSIZETITLE)
 
             max_values[j] = max(
                 max_values[j], var[TIMEStap[0]:TIMEStap[1]].max())
@@ -2015,7 +2082,7 @@ if plot_dE_body:
                 axs[j].xaxis.set_ticklabels(x_labels,
                                             rotation=90,
                                             fontsize=FONTSIZE)
-            axs[j].set_xlabel('Time (MM-DD)', fontsize=FONTSIZE,
+            axs[j].set_xlabel('Time (MM-DD)', fontsize=FONTSIZETITLE,
                               labelpad=2)
             axs[j].grid(False)
 
@@ -2160,10 +2227,10 @@ if plot_zm_body:
             if variables[j] == "CyB":
                 var = B_values
                 axs[j].set_ylabel(f"mgC/L {variables[j]}",
-                                  fontsize=FONTSIZE)
+                                  fontsize=FONTSIZETITLE-1)
             else:
                 axs[j].set_ylabel(variables[j],
-                                  fontsize=FONTSIZE)
+                                  fontsize=FONTSIZETITLE)
 
             max_values[j] = max(
                 max_values[j], var[TIMEStap[0]:TIMEStap[1]].max())
@@ -2213,7 +2280,7 @@ if plot_zm_body:
                 axs[j].xaxis.set_ticklabels(x_labels,
                                             rotation=90,
                                             fontsize=FONTSIZE)
-            axs[j].set_xlabel('Time (MM-DD)', fontsize=FONTSIZE,
+            axs[j].set_xlabel('Time (MM-DD)', fontsize=FONTSIZETITLE,
                               labelpad=2)
             axs[j].grid(False)
 
@@ -2340,10 +2407,10 @@ if plot_kbg_body:
             if variables[j] == "CyB":
                 var = B_values
                 axs[j].set_ylabel(f"mgC/L {variables[j]}",
-                                  fontsize=FONTSIZE)
+                                  fontsize=FONTSIZETITLE-1)
             else:
                 axs[j].set_ylabel(variables[j],
-                                  fontsize=FONTSIZE)
+                                  fontsize=FONTSIZETITLE)
 
             max_values[j] = max(
                 max_values[j], var[TIMEStap[0]:TIMEStap[1]].max())
@@ -2393,7 +2460,7 @@ if plot_kbg_body:
                 axs[j].xaxis.set_ticklabels(x_labels,
                                             rotation=90,
                                             fontsize=FONTSIZE)
-            axs[j].set_xlabel('Time (MM-DD)', fontsize=FONTSIZE,
+            axs[j].set_xlabel('Time (MM-DD)', fontsize=FONTSIZETITLE,
                               labelpad=2)
             axs[j].grid(False)
 
@@ -2528,10 +2595,10 @@ if plot_temp_peak_fish:
             if variables[j] == "CyB":
                 var = B_values
                 axs[j].set_ylabel(f"mgC/L {variables[j]}",
-                                  fontsize=FONTSIZE)
+                                  fontsize=FONTSIZETITLE-1)
             else:
                 axs[j].set_ylabel(variables[j],
-                                  fontsize=FONTSIZE)
+                                  fontsize=FONTSIZETITLE)
 
             max_values[j] = max(
                 max_values[j], var[TIMEStap[0]:TIMEStap[1]].max())
@@ -2581,7 +2648,7 @@ if plot_temp_peak_fish:
                 axs[j].xaxis.set_ticklabels(x_labels,
                                             rotation=90,
                                             fontsize=FONTSIZE)
-            axs[j].set_xlabel('Time (MM-DD)', fontsize=FONTSIZE,
+            axs[j].set_xlabel('Time (MM-DD)', fontsize=FONTSIZETITLE,
                               labelpad=2)
             axs[j].grid(False)
 
@@ -2627,6 +2694,204 @@ if plot_temp_peak_fish:
         # Save plots
         # path = './New data/Images/Year v_1/'
         name = 'Full_model_temp_peaks_short_long_term_fish'+FORMAT
+        plt.savefig(path+name, dpi=RESOLUTION, bbox_inches='tight')
+    # Show the plot
+    plt.show()
+
+
+if plot_temp_peak_fish_body:
+    # Set the y-axis formatter to use scientific notation
+    y_formatter = ScalarFormatter(useMathText=True, useOffset=False)
+    y_formatter.set_powerlimits((-3, 4))  # Adjust the power limits as needed
+    y_formatter.orderOfMagnitude = 4  # Set the exponent to 4
+
+    # Temp_increase = [0, 0.1, 0.2, 0.3, 0.4]
+    # Temp_increase = [0, 0.6, 0.7, 1.0, 1.1, 1.4]
+    # Temp_increase = [0, 0.4, 0.8, 1.7, 2.6, 3.4]
+
+    # Temp_increase = [0, 0.1, 0.2, 0.3,
+    # 0.4, 0.6, 0.7, 0.8]
+
+    Temp_increase = np.append(np.round(np.arange(0.3, 3.4+0.3, 0.3), 1), 0)
+    Temp_increase = list(Temp_increase)
+
+    # colors = sns.color_palette(map_color, n_colors=len(Temp_increase))
+    colors = cm.GnBu(np.linspace(0.3, 1, len(Temp_increase)))
+    solution_Temp = {}
+
+    fig, axs = plt.subplots(1, 2, figsize=FigsizeSome)
+
+    axs = axs.ravel()
+    # Change function of temperature
+    max_values = [0, 0, 0, 0]
+    min_values = [10, 10, 10, 10]
+    for Temp in Temp_increase:
+        model_CyB = read_params()
+        # if Temp != 0:
+        #     # Data Temperature
+        #     days_temp = np.array(
+        #         [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334])
+        #     temp_water = np.array(
+        #         [7.35, 7.3, 7.91, 9.4, 11.67, 13.59, 15.49, 16.02, 14.08, 11.29, 9.26, 8.07])
+
+        #     delta_temp = Temp
+
+        #     for i in range(temp_water.shape[0]):
+        #         if temp_water[i] > 11:
+        #             temp_water[i] = temp_water[i] + delta_temp
+
+        #     # Define the logistic function
+        #     def temperature(t, K, T, t_0, k_0):
+        #         return K*np.exp(-T*(t-t_0)**2)+k_0
+
+        #     # Set bounds for positive values
+        #     bounds = ([0, 0, 0, 0], [np.inf, np.inf, np.inf, np.inf])
+
+        #     # Fit the logistic function to the data
+        #     initial_guess = [15, 0, 200, 7]
+        #     params, covariance = curve_fit(temperature,
+        #                                    days_temp,
+        #                                    temp_water,
+        #                                    p0=initial_guess,
+        #                                    bounds=bounds)
+
+        #     model_CyB.max_temp = round(params[0], 5)
+        #     model_CyB.min_temp = round(params[3], 5)
+        #     model_CyB.max_temp_time = round(params[2]-20, 5)
+        #     model_CyB.T = round(params[1], 5)
+        model_CyB.auxTemp = Temp
+        # Different temperature
+
+        # modelCyB.max_temp = 25.9
+        solution, info = model_CyB.solver()
+        M_values, B_values, A_values, \
+            Q_B_values, Q_A_values, P_values, \
+            D_values, Y_values, W_values, \
+            v_A_values, v_D_values, v_Y_values, \
+            v_W_values, O_values = solution.T
+
+        solution_values = [v_Y_values,
+                           v_W_values]
+
+        variables = ['Body burden of yellow perch',
+                     'Body burden of walleye']
+        color_index = Temp_increase.index(Temp) % len(colors)
+        for j, var in enumerate(solution_values):
+
+            axs[j].yaxis.set_major_formatter(y_formatter)
+
+            axs[j].tick_params(axis='y', labelsize=FONTSIZE,
+                               pad=0.5)
+            axs[j].tick_params(axis='x', labelsize=FONTSIZE,
+                               pad=0.5)
+            for spine in axs[j].spines.values():
+                spine.set_color('black')  # Set all spines color to black
+            axs[j].tick_params(axis='both', which='both', bottom=True, top=False,
+                               left=True, right=False, direction='out',
+                               length=tick_len, width=0.7, colors='black')
+
+            if variables[j] == "CyB":
+                var = B_values
+                axs[j].set_ylabel(f"mgC/L {variables[j]}",
+                                  fontsize=FONTSIZETITLE-1)
+            else:
+                axs[j].set_ylabel(variables[j],
+                                  fontsize=FONTSIZETITLE)
+
+            max_values[j] = max(
+                max_values[j], var[TIMEStap[0]:TIMEStap[1]].max())
+            min_values[j] = min(
+                min_values[j], var[TIMEStap[0]:TIMEStap[1]].min())
+            # axs[j].set_ylim(min_values[j]*(1-0.05), max_values[j]*(1+0.1))
+            # axs[j].set_xlim(model_CyB.t[TIMEStap[0]:TIMEStap[1]].min(),
+            #                 model_CyB.t[TIMEStap[0]:TIMEStap[1]].max())
+            # axs[j].yaxis.set_major_formatter(y_formatter)
+
+            axs[j].xaxis.set_major_locator(
+                MaxNLocator(integer=True, nbins=NoBins))
+
+            x_ticks = axs[j].xaxis.get_ticklocs()
+
+            # x_ticks = np.array([i*60 for i in range(int(365/60))])
+
+            if len(dates) >= len(x_ticks):
+                max_tick = x_ticks.max()
+                No_days = len(DATES)
+                # x_labels_dates = [DATES[int((x_val/max_tick)*364)]
+                #             for x_val in x_ticks[:: SpaceDates ]]
+
+                x_labels = [''] * len(x_ticks)
+
+                # x_labels[::SpaceDates] = [DATES[int((x_val/max_tick)*No_days)]
+                #                           for x_val in x_ticks[:: SpaceDates]]
+                x_labels[::SpaceDates] = [dates[int(x_val)][5:]
+                                          for x_val in x_ticks[:: SpaceDates]]
+                axs[j].set_xticks(x_ticks)
+
+                axs[j].xaxis.set_ticklabels(x_labels,
+                                            rotation=90,
+                                            fontsize=FONTSIZE)
+
+                # Adjust the length of ticks with labels
+                for tick in axs[j].xaxis.get_major_ticks():
+                    if tick.label1.get_text():  # Check if tick has a label
+                        tick.tick1line.set_markersize(tick_len)
+                        # tick.tick2line.set_markersize(tick_len)
+                    else:
+                        tick.tick1line.set_markersize(other_tick_len)
+                        # tick.tick2line.set_markersize(other_tick_len)
+
+            else:
+                x_labels = dates
+                axs[j].xaxis.set_ticklabels(x_labels,
+                                            rotation=90,
+                                            fontsize=FONTSIZE)
+            axs[j].set_xlabel('Time (MM-DD)', fontsize=FONTSIZETITLE,
+                              labelpad=2)
+            axs[j].grid(False)
+
+            if Temp != 0:
+                line, = axs[j].plot(model_CyB.t, var, color=colors[color_index],
+                                    label=f"+{Temp:.2f}", linewidth=LINEWIDTH)
+
+            elif Temp == 0:
+                line, = axs[j].plot(model_CyB.t, var, color=BASE_COLORS,
+                                    label=f"+{Temp:.2f} (base)", linewidth=LINEWIDTH)
+
+            if fill:
+                axs[j].fill_between(model_CyB.t, var, var.min(),
+                                    color=colors[color_index], alpha=0.05)
+
+    # Set common x-axis label and title
+    # axs[-1].set_xlabel('Time (days)')
+    if WithTitle:
+        plt.suptitle(lake_name + ' increase of maximum peaks')
+    handles, labels = axs[0].get_legend_handles_labels()
+    if color_bar:
+        # Create a ScalarMappable object
+        sm = plt.cm.ScalarMappable(cmap=map_color, norm=plt.Normalize(
+            vmin=min(Temp_increase), vmax=max(Temp_increase)))
+
+        # Add color bar to the figure
+        plt.colorbar(sm, ax=axs, cmap=colors)
+    else:
+        handles, labels = axs[0].get_legend_handles_labels()
+        # box_psition = (0.96, 0.88)
+        sorted_indices = sorted(
+            range(len(labels)), key=lambda i: extract_value(labels[i]))
+        legend = fig.legend([handles[i] for i in sorted_indices],
+                            [labels[i] for i in sorted_indices],
+                            loc='outside upper center',
+                            bbox_to_anchor=box_psition_fish_body,
+                            fancybox=True, shadow=False, ncol=1,
+                            title='Increase\n in $\degree C$')
+
+        legend.get_title().set_ha('center')
+    plt.tight_layout()
+    if SAVE_PLOT:
+        # Save plots
+        # path = './New data/Images/Year v_1/'
+        name = 'Full_model_temp_peaks_fish_body_burden'+FORMAT
         plt.savefig(path+name, dpi=RESOLUTION, bbox_inches='tight')
     # Show the plot
     plt.show()
