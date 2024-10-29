@@ -4,8 +4,8 @@ Jacob Serpico1,a, B. A. Zambrano-Luna1,a, Russell Milne1,a, Christopher M. Hegge
 
 1. Interdisciplinary Lab for Mathematical Ecology and Epidemiology & Department of Mathematical and Statistical Sciences, University of Alberta, Edmonton, Alberta T6G 2R3, Canada.
 2. Department of Environmental Science and Policy, University of California - Davis, California 95616, United States
-3. These authors contributed equally to this work. 7
-*Corresponding author: hao8@ualberta.ca
+3. These authors contributed equally to this work.
+4. *Corresponding author: hao8@ualberta.ca
 
 Harmful cyanobacterial blooms (CBs) are increasingly prevalent worldwide, posing significant environmental 10
 and health concerns due to their potential toxicity. Understanding the mechanisms driving CBs is crucial for 11
