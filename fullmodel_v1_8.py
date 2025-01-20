@@ -353,10 +353,10 @@ class modelCyB(object):
             (N_W(O) + params["x_W"]*v_W) * W
         # 10000
         dQ_Bdt = rho_B(Q_B, P, params) - \
-            params['mu_B'] * (Q_B - params['Q_m_B']) * h_B(B, A, params)
+            params['mu_B'] * (Q_B - params['Q_m_B']) * h_B(B, A, params) #We need to incorporate temperature into growth term.
 
         dQ_Adt = rho_A(Q_B, P, params) - \
-            params['mu_A'] * (Q_A - params['Q_m_A']) * h_A(B, A, params)
+            params['mu_A'] * (Q_A - params['Q_m_A']) * h_A(B, A, params) #We need to incorporate temperature into growth term.
 
         dPdt = (params["d_E"] / self.Zm(t)) * (params['p_in'] - P) - \
             rho_A(Q_A, P, params) * A - \
