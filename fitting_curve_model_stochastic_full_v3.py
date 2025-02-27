@@ -11,18 +11,57 @@ from Extract_dataV2 import extractData
 # Initial conditions
 M_0 = 0
 A_0 = 0.05
-B_0 = 0.004  # 0.004
+B_0 = 0.004 
 Q_B_0 = 0.01
 Q_A_0 = 0.01
-P_0 = 0.06  # 10
-D_0 = 0.0239  # 0.0239
-Y_0 = 0.025
-W_0 = 0.0025
-O_0 = 6
+D_0 = 0.0239  
+Y_0 = 0.025*10
+W_0 = 0.0025*10
 v_A_0 = 0
 v_D_0 = 0
 v_Y_0 = 0
 v_W_0 = 0
+
+# Define the model function to pass to curve_fit
+
+# Data
+data = pd.read_csv(
+    "merged_water_quality_data.csv", low_memory=False)
+
+lake_name = "PIGEON LAKE"
+
+# labels = ['MICROCYSTIN, TOTAL',
+#           'PHOSPHORUS TOTAL DISSOLVED',
+#           'OXYGEN DISSOLVED (FIELD METER)',
+#           'Total cyanobacterial cell count (cells/mL)']
+
+labels = ['MICROCYSTIN, TOTAL',
+          'OXYGEN DISSOLVED (FIELD METER)',
+          'Total cyanobacterial cell count (cells/mL)']
+
+
+# years = ['2018', '2019', '2020', '2021', '2022', '2023']
+years = ['2021']
+yearname = ''
+for year in years:
+    yearname = yearname + str(year) + '_'
+
+coment = "_v7_3Var_"+yearname
+data_fit = extractData(data, years, labels, lake_name)
+
+data = None
+
+if lake_name in ['PIGEON LAKE']:
+    rectTemp = 0
+    P_0 = 0.05
+    P_in = 0.01
+    O_0 = 6
+
+elif lake_name in ['PINE LAKE']:
+    rectTemp = -2.75
+    P_0 = 0.4
+    P_in = 0.2
+    O_0 = 5
 
 
 model_CyB = modelCyB()
@@ -37,37 +76,9 @@ initial_conditions = [M_0, B_0, A_0,
 
 model_CyB.initial = initial_conditions
 
+model_CyB.params['p_in'] = P_in
+
 model_CyB.toxines = True
-
-# Define the model function to pass to curve_fit
-
-# Data
-data = pd.read_csv(
-    "merged_water_quality_data.csv", low_memory=False)
-
-lake_name = "PINE LAKE"
-
-# labels = ['MICROCYSTIN, TOTAL',
-#           'PHOSPHORUS TOTAL DISSOLVED',
-#           'OXYGEN DISSOLVED (FIELD METER)',
-#           'Total cyanobacterial cell count (cells/mL)']
-
-labels = ['MICROCYSTIN, TOTAL',
-          'OXYGEN DISSOLVED (FIELD METER)',
-          'Total cyanobacterial cell count (cells/mL)']
-
-
-# years = ['2018', '2019', '2020', '2021', '2022', '2023']
-years = ['2017']
-yearname = ''
-for year in years:
-    yearname = yearname + str(year) + '_'
-
-coment = "_v6_3Var_"+yearname
-data_fit = extractData(data, years, labels, lake_name)
-
-data = None
-
 
 # New time scale
 day_start = pd.to_datetime("2023-05-01").day_of_year
@@ -102,7 +113,7 @@ TempZmData = pd.read_csv(path+lake_name + 'WaterTemperature.csv')
 TempZmData['Date'] = pd.to_datetime(
     TempZmData['Date'], format='mixed')
 
-tempSamp = TempZmData['lake_mix_layer_temperature']
+tempSamp = TempZmData['lake_mix_layer_temperature'] - rectTemp
 Zmsample = (TempZmData['lake_mix_layer_depth_min'] +
             TempZmData['lake_mix_layer_depth_max'])*0.5
 days = TempZmData['Date'].dt.day_of_year
@@ -120,9 +131,8 @@ model_CyB.get_interpZm(Zmsample, days)
 unknow_params = ["alpha_D", "alpha_Y",
                  "tau_D", "tau_Y",
                  "a_A", "a_D",
-                 "sigma_A", "sigma_D",
-                 "x_A", "x_D",
-                 "n_D"]
+                 "sigma_A",
+                 "x_A"]
 
 
 def model(parameterTuple):
@@ -207,13 +217,22 @@ def sumOfSquaredError(parameterTuple, *args):
 
     # Local error
     def localerror(label, ModelOutput):
+        maskempty = ~np.isnan(ModelOutput)
+        ModelOutput = (ModelOutput - ModelOutput[maskempty].min())/(ModelOutput[maskempty].max() - ModelOutput[maskempty].min())
+        
         dayslabel = list(data_fit[label].keys())
         dayslabel.sort()
         ans1 = 0
         samples = 0
+        # Concatenate valid data from all days (ignoring -999)
+        all_valid = np.concatenate([
+            data_fit[label][day][data_fit[label][day] != -999] for day in dayslabel
+        ])
+        global_min = all_valid.min()
+        global_max = all_valid.max()
         for day in dayslabel:
             dataday = data_fit[label][day]
-            dataday = dataday[dataday != -999]
+            dataday = (dataday[dataday != -999] )/(global_max-global_min)
             if len(dataday) != 0 and day < days_end:
                 samples += 1
                 # print(dataday, label, ModelOutput[int((day - day_start)*3)])

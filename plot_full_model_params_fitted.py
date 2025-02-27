@@ -5,9 +5,7 @@ import pandas as pd
 from Extract_dataV2 import extractData
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy.optimize import curve_fit
-import matplotlib.cm as cm
-from matplotlib.ticker import MaxNLocator
+import os
 from datetime import datetime, timedelta
 # Define your ODE function
 
@@ -35,7 +33,7 @@ LakeYear = {'PIGEON LAKE': ['2021'],
             'MENDOTA LAKE': ['2018']}
 
 
-lake_name = "PIGEON LAKE"
+lake_name = "MENDOTA LAKE"
 
 
 years = LakeYear[lake_name]
@@ -48,6 +46,9 @@ if lake_name == 'PIGEON LAKE' and years[-1] == '2021':
     coment = "_v6_3Var_"
 else:
     coment = "_v6_3Var_" + yearname
+
+if lake_name != "PINE LAKE":
+    coment = "_v7_3Var_" + yearname
 
 
 if years[-1] == '2018' and lake_name == 'MENDOTA LAKE':
@@ -82,27 +83,27 @@ data_fit = extractData(data, years, labels, lake_name)
 
 if lake_name in ['MONONA LAKE']:
     rectTemp = 3.0
-    B_scale = 0.1
-    A_scale = 100
-    D_scale = 0.1
+    B_scale = 1000*0.5 #0.1
+    A_scale = 0.01 #100
+    D_scale = 1 #0.1
     P_0 = 0.01
     P_in = 0.01
     O_0 = 5
 
 elif lake_name in ['MENDOTA LAKE']:
-    rectTemp = 3.0
-    B_scale = 0.1
-    A_scale = 10
-    D_scale = 10
-    P_0 = 0.075
+    rectTemp = 3.0 #3.0
+    B_scale = 0.15 #0.1
+    A_scale = 0.05 #10
+    D_scale = 5 #10
+    P_0 = 0.075 #0.075
     P_in = 0.015
     O_0 = 5
 
 elif lake_name in ['PIGEON LAKE']:
-    rectTemp = 0.0
-    B_scale = 1
-    A_scale = 1
-    D_scale = 1
+    rectTemp = -1.75 # 0
+    B_scale = 0.04 #1
+    A_scale = 0.01 #1
+    D_scale = 0.075 #1
     P_0 = 0.05
     P_in = 0.01
     O_0 = 6
@@ -210,8 +211,8 @@ fill = False
 
 solution, info = model_CyB.solver()
 
-path = './New data/Images/Year v_1/'
-name = 'Full_model'+".pdf"
+# path = './New data/Images/Year v_1/'
+# name = 'Full_model'+".pdf"
 
 # model_CyB.print_solv(title='', all_plot=True,
 #                      save=False,
@@ -229,12 +230,14 @@ M_values, B_values, A_values, \
     v_W_values, O_values = solution.T
 
 
-SaveFigures = False
+SaveFigures = True
 yearname = ''
 for year in years:
     yearname = yearname + str(year) + '_'
+    
 path = "./Figures/"+lake_name + '/'+yearname
-RESOLUTION = 600
+os.makedirs(path, exist_ok=True)
+RESOLUTION = 900
 
 
 def generate_dates(year):

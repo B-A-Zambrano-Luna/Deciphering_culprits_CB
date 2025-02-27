@@ -29,7 +29,7 @@ params = {
     'z_mK_bg': (1*0.3),
     'H_B': 120,
     'H_A': 120,
-    'z_m': 2,
+    'z_m': None,
     'Q_m_B': 0.004,
     'Q_M_B': 0.04,
     'Q_m_A': 0.004,
@@ -38,14 +38,14 @@ params = {
     'rho_m_B': 1,
     'M_B': 1.5/1000,
     'M_A': 1.5/1000,
-    'mu_B': 1,
-    'mu_A': 1,
+    'mu_B': 1.0,  # We can vary 0.9-1.1
+    'mu_A': 1,  # We can vary 0.9-1.1
     'mu_r_B': 0.05,
     'mu_r_A': 0.05,
     'v': 0.25,
     'd_E': 0.02,
-    'p_in': 0.03,
-    'e_BD': 0.8,
+    'p_in': None,
+    'e_BD': 0.5,  # We can vary 0.2-0.6
     'e_AD': 0.8,
     'phi': 700,
     'phi_D': 700,
@@ -55,51 +55,53 @@ params = {
     'tau_B': 1.23,
     'tau_A': 1.23,
     'theta_D': 0.03,
-    'n_D': 1/365,
+    'n_D': 1/100,  # 1/365, # 0.12
     'theta_Y': 0.064,
     'theta_W': 0.061,
-    'e_DY': 0.667,
-    'e_YW': 0.788,
-    'alpha_D': 0,
-    'alpha_Y': 0,
-    "tau_Y": 0,
-    'tau_D': 0,
-    'n_Y': 0.0016,
-    'n_W': 0.00104,
-    "n_A": 0.39,
-    "n_B": 0.39,
-    'p': 1.11/14.12376,  # mug/mgC  # 100/14.12376,  # mug/mgC
+    'e_DY': 0.3,  # 0.667,
+    'e_YW': 0.2,  # 0.788,
+    'alpha_D': None,
+    'alpha_Y': None,
+    "tau_Y": None,
+    'tau_D': None,
+    'n_Y': 0.00057,  # 0.00016,
+    'n_W': 0.00057,  # 0.00104,
+    "n_A": 0.039,
+    "n_B": 0.039,
+    'p': 0.9,  # 0.85,  # 1.11/14.12376,  # mug/mgC  # 100/14.12376,  # mug/mgC
     'd_M': 0.02,
-    "x_A": 0,
+    "x_A": None,
     "x_D": 0.0021,
     "x_Y": 0.00398,
     "x_W": 0.00398,
-    "sigma_A": 0,
-    "sigma_D": 0,
+    "sigma_A": None,
+    "sigma_D": 0.12,
     "sigma_Y": 0.0062,
     "sigma_W": 0.0062,
-    "a_A": 0,
-    "a_D": 0.55,
-    "a_Y": 0.1733*(10**(-6)),
-    "a_W": 0.1733*(10**(-6)),
+    "a_A": None,
+    "a_D": 0.55*(10**(-3)),
+    "a_Y": 0.1733*(10**(-3)),  # 0.1733*(10**(-6)),
+    "a_W": 0.1733*(10**(-3)),  # 0.1733*(10**(-6)),
     "T_min_B": 5,
-    "T_opt_B": 30,
+    "T_opt_B": 30, #30,
     "T_max_B": 40,
     "T_min_A": 5,
     "T_opt_A": 27,
     "T_max_A": 42,
-    "q_air": 0.1,
+    "q_air": 0.075,
     "q_d": 0.01,
     "delta_A": 0.02,
     "delta_B+": 0.02+0.01,
-    "delta_B-": 0.09545,
-    "delta_D": 0.013568,
+    "delta_B-": 2.4,  # 0.09545,
+    "delta_D": 0.07872,  # 0.013568,
     "delta_Y": 0.0045,
     "delta_W": 0.005,
     "r_Y": 1,
-    "r_W": 2,
+    "r_W": 1,
     "Ext_Y": 0.325,
-    "Ext_W": 0.025
+    "Ext_W": 0.025,
+    'K_Y': 0.4,
+    'K_W': 0.15
 }
 
 # Define functions
@@ -127,7 +129,7 @@ def eta_B(T, params):
     T_max = params["T_max_B"]
     T_opt = params["T_opt_B"]
 
-    num = (T-T_min)**2*(T-T_max)
+    num = ((T-T_min)**2)*(T-T_max)
     den = (T_opt-T_min)*((T_opt-T_min)*(T-T_opt) -
                          (T_opt-T_max)*(T_opt+T_min-2*T))
 
@@ -190,11 +192,11 @@ def N_W(O):
 
 
 def N_B(T, params):
-    return params["n_B"] * (1 - np.exp(-0.01577*(T-29.58466)**2))
+    return params["n_B"]
 
 
 def N_A(T, params):
-    return params["n_A"] * (1 - np.exp(-0.01002*(T-26.75)**2))
+    return params["n_A"]
 
 
 def E_YW(T, params):
@@ -278,11 +280,7 @@ class modelCyB(object):
     def get_interpTemp(self, tempSamp, days):
         self.interpTemp = Akima1DInterpolator(
             days, tempSamp)
-        # self.interpTemp = PchipInterpolator(days, tempSamp, extrapolate=True)
-        # self.interpTemp = interp1d(
-        #     days, tempSamp,
-        #     fill_value='extrapolate',
-        #     kind='next')
+        
 
     def get_interpZm(self, Zmsample, days):
         self.interpZm = Akima1DInterpolator(
@@ -290,10 +288,7 @@ class modelCyB(object):
 
     def Zm(self, t):
         return self.interpZm(t) + self.auxZm
-        # if self.interpZm(t) < 3:
-        #     return 3
-        # else:
-        #     return self.interpZm(t)
+        
 
     def Temp(self, t, data=None):
         # print('Temp:', self.interpTemp(t), t)
@@ -321,7 +316,7 @@ class modelCyB(object):
             params['mu_r_B'] * B - \
             (params["d_E"] / self.Zm(t)) * B\
             - f_B(B, A, params)*D\
-            - N_B(self.Temp(t), params)*B*0.01
+            - N_B(self.Temp(t), params)*B
 
         dAdt = (params['mu_A']
                 * (1 - (params['Q_m_A'] / Q_A))
@@ -331,7 +326,7 @@ class modelCyB(object):
             ((params['v'] + params["d_E"]) / self.Zm(t)) * A \
             - (params["x_A"]*v_A)*A \
             - f_A(B, A, params)*D\
-            - N_A(self.Temp(t), params)*A*0.01
+            - N_A(self.Temp(t), params)*A
 
         dDdt = params['e_BD'] * np.minimum(1, Q_B / params['theta_D']) * f_B(B, A, params)*D \
             + params['e_AD'] * np.minimum(1, Q_A / params['theta_D']) * f_A(B, A, params)*D \
@@ -340,23 +335,22 @@ class modelCyB(object):
             - (0.02*f_D(D, params))*Y
 
         dYdt = params['r_Y'] * E_YD(self.Temp(t), params)*((0.2)*f_D(D, params)
-                                                           + (1-0.2) * params["Ext_Y"]) * Y * (1-Y/0.4) \
+                                                           + (1-0.2) * params["Ext_Y"]) * Y * (1-Y/params['K_Y']) \
             - params['alpha_D'] * Y - \
             (N_Y(O) + params["x_Y"]*v_Y) * Y\
             - 0.3*f_Y(Y, params)*W
-        # print(E_YD(self.Temp(t), params)*f_D(D, params), params['alpha_D'])
-        # print(params["x_Y"]*v_Y)
+        
 
         dWdt = params['r_W'] * E_YW(self.Temp(t), params)*((0.3)*f_Y(Y, params)
-                                                           + ((1-0.3)*params["Ext_W"]))*W*(1-W/0.15)\
+                                                           + ((1-0.3)*params["Ext_W"]))*W*(1-W/params['K_W'])\
             - params['alpha_Y'] * W - \
             (N_W(O) + params["x_W"]*v_W) * W
-        # 10000
+        
         dQ_Bdt = rho_B(Q_B, P, params) - \
-            params['mu_B'] * (Q_B - params['Q_m_B']) * h_B(B, A, params) #We need to incorporate temperature into growth term.
+            params['mu_B'] * (Q_B - params['Q_m_B']) * h_B(B, A, params)  * eta_B(self.Temp(t), params)
 
-        dQ_Adt = rho_A(Q_B, P, params) - \
-            params['mu_A'] * (Q_A - params['Q_m_A']) * h_A(B, A, params) #We need to incorporate temperature into growth term.
+        dQ_Adt = rho_A(Q_A, P, params) - \
+            params['mu_A'] * (Q_A - params['Q_m_A']) * h_A(B, A, params) * eta_A(self.Temp(t), params)
 
         dPdt = (params["d_E"] / self.Zm(t)) * (params['p_in'] - P) - \
             rho_A(Q_A, P, params) * A - \
@@ -367,13 +361,13 @@ class modelCyB(object):
         else:
             dv_Adt = params["a_A"]*M - params["sigma_A"]*v_A \
                 - params["mu_A"]*(1 - params["Q_m_A"]/Q_A) * \
-                h_A(A, B, params)*v_A
+                h_A(A, B, params)*v_A * eta_A(self.Temp(t), params)
 
         def Q_MCYST(T, params):
             return 4.703283*params['mu_B'] \
                 * (1 - (params['Q_m_B'] / Q_B))\
                 * h_B(A, B, params)\
-                * eta_B(self.Temp(t), params)  \
+                * eta_B(T, params)  \
                 + 3.5685
 
         if round(np.min(D), 6) <= 0:
@@ -401,11 +395,11 @@ class modelCyB(object):
         else:
             dv_Wdt = params["a_W"]*M - params["sigma_W"]*v_W\
                 + f_Y(Y, params)*v_Y\
-                - E_YW(self.Temp(t), params)*f_Y(Y, params) * W
+                - E_YW(self.Temp(t), params)*f_Y(Y, params) * v_W
 
         dOdt = params["q_air"] - params["q_d"]*O \
-            + params["delta_A"] * A * (1 - (params['Q_m_A'] / Q_A)) * h_A(A, B, params)*eta_A(self.Temp(t), params) \
-            + params["delta_B+"]*B*(1 - (params['Q_m_B'] / Q_B)) * h_B(A, B, params)*eta_B(self.Temp(t), params)\
+            + params["delta_A"] * A * (1 - (params['Q_m_A'] / Q_A)) * h_A(A, B, params)*eta_A(self.Temp(t), params)* params['mu_A'] \
+            + params["delta_B+"]*B*(1 - (params['Q_m_B'] / Q_B)) * h_B(A, B, params)*eta_B(self.Temp(t), params)*params['mu_B']\
             - params["delta_B-"]*N_B(self.Temp(t), params) * B\
             - delta_D(self.Temp(t), params) * D\
             - delta_Y(self.Temp(t), params) * Y\

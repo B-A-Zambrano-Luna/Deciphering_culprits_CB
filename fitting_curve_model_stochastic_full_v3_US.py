@@ -11,33 +11,17 @@ from Extract_dataV2 import extractData
 # Initial conditions
 M_0 = 0
 A_0 = 0.05
-B_0 = 0.004  # 0.004
+B_0 = 0.004 
 Q_B_0 = 0.01
 Q_A_0 = 0.01
-P_0 = 0.06  # 10
-D_0 = 0.0239  # 0.0239
-Y_0 = 0.025
-W_0 = 0.0025
-O_0 = 6
+D_0 = 0.0239  
+Y_0 = 0.025*10
+W_0 = 0.0025*10
 v_A_0 = 0
 v_D_0 = 0
 v_Y_0 = 0
 v_W_0 = 0
 
-
-model_CyB = modelCyB()
-
-initial_conditions = [M_0, B_0, A_0,
-                      Q_B_0,
-                      Q_A_0, P_0,
-                      D_0,
-                      Y_0, W_0,
-                      v_A_0, v_D_0,
-                      v_Y_0, v_W_0, O_0]
-
-model_CyB.initial = initial_conditions
-
-model_CyB.toxines = True
 
 # Define the model function to pass to curve_fit
 
@@ -46,7 +30,7 @@ model_CyB.toxines = True
 lake_name = "MENDOTA LAKE"
 
 
-years = ['2015']
+years = ['2018']
 yearname = ''
 for year in years:
     yearname = yearname + str(year) + '_'
@@ -67,11 +51,40 @@ else:
               'Total cyanobacterial cell count (cells/mL)']
 
 
-coment = "_v6_3Var_"+yearname
+coment = "_v7_3Var_"+yearname
 data_fit = extractData(data, years, labels, lake_name)
 
 data = None
 
+
+if lake_name in ['MONONA LAKE']:
+    rectTemp = 3.0
+    P_0 = 0.01
+    P_in = 0.01
+    O_0 = 5
+
+elif lake_name in ['MENDOTA LAKE']:
+    rectTemp = 3.0
+    P_0 = 0.075
+    P_in = 0.015
+    O_0 = 5
+
+
+model_CyB = modelCyB()
+
+initial_conditions = [M_0, B_0, A_0,
+                      Q_B_0,
+                      Q_A_0, P_0,
+                      D_0,
+                      Y_0, W_0,
+                      v_A_0, v_D_0,
+                      v_Y_0, v_W_0, O_0]
+
+model_CyB.initial = initial_conditions
+
+model_CyB.params['p_in'] = P_in
+
+model_CyB.toxines = True
 
 # New time scale
 day_start = pd.to_datetime("2023-05-01").day_of_year
@@ -89,24 +102,13 @@ model_CyB.set_linetime()
 
 # Some parameters
 
-# Death Daphnia
-model_CyB.params['n_D'] = 0.06
-model_CyB.params['e_BD'] = 0.8
-model_CyB.params["tau_B"] = 1.23
-model_CyB.params["alpha_B"] = 0.0035
-model_CyB.params['r_Y'] = 2
-model_CyB.params['r_W'] = 1
-model_CyB.params['Ext_Y'] = 0.025*13
-model_CyB.params['Ext_W'] = 0.025
-model_CyB.params['p_in'] = 0.03
-
 # Get Temperature Function
 path = './ERA5-Land/' + years[-1]
 TempZmData = pd.read_csv(path+lake_name + 'WaterTemperature.csv')
 TempZmData['Date'] = pd.to_datetime(
     TempZmData['Date'], format='mixed')
 
-tempSamp = TempZmData['lake_mix_layer_temperature']
+tempSamp = TempZmData['lake_mix_layer_temperature'] - rectTemp
 Zmsample = (TempZmData['lake_mix_layer_depth_min'] +
             TempZmData['lake_mix_layer_depth_max'])*0.5
 days = TempZmData['Date'].dt.day_of_year
@@ -123,10 +125,9 @@ model_CyB.get_interpZm(Zmsample, days)
 
 unknow_params = ["alpha_D", "alpha_Y",
                  "tau_D", "tau_Y",
-                 "a_A", "a_D",
-                 "sigma_A", "sigma_D",
-                 "x_A", "x_D",
-                 "n_D"]
+                 "a_A",
+                 "sigma_A",
+                 "x_A"]
 
 
 def model(parameterTuple):
@@ -170,7 +171,6 @@ minimum_params["sigma_A"] = 0.001
 minimum_params["sigma_D"] = 0.001
 minimum_params["x_A"] = 0.001
 minimum_params["x_D"] = 0.001
-minimum_params["n_D"] = 0.0206
 # minimum_params['p_in'] = 0.001
 # minimum_params["NormM"] = 0.01
 
@@ -186,7 +186,7 @@ maximum_params["sigma_A"] = 0.01
 maximum_params["sigma_D"] = 0.01
 maximum_params["x_A"] = 0.01
 maximum_params["x_D"] = 0.01
-maximum_params["n_D"] = 0.25
+
 
 
 param_bounds = [(0, 0.1),  # B(0)
@@ -211,19 +211,27 @@ def sumOfSquaredError(parameterTuple, *args):
 
     # Local error
     def localerror(label, ModelOutput):
+        maskempty = ~np.isnan(ModelOutput)
+        ModelOutput = (ModelOutput - ModelOutput[maskempty].min())/(ModelOutput[maskempty].max() - ModelOutput[maskempty].min())
+        
         dayslabel = list(data_fit[label].keys())
         dayslabel.sort()
         ans1 = 0
         samples = 0
+        # Concatenate valid data from all days (ignoring -999)
+        all_valid = np.concatenate([
+            data_fit[label][day][data_fit[label][day] != -999] for day in dayslabel
+        ])
+        global_min = all_valid.min()
+        global_max = all_valid.max()
         for day in dayslabel:
             dataday = data_fit[label][day]
-            dataday = dataday[dataday != -999]
-            if len(dataday) != 0 and day <= days_end and day >= day_start:
+            dataday = (dataday[dataday != -999] )/(global_max-global_min)
+            if len(dataday) != 0 and day < days_end:
                 samples += 1
                 # print(dataday, label, ModelOutput[int((day - day_start)*3)])
                 ans1 += ((dataday -
                           ModelOutput[int((day - day_start)*3)])**2).mean()
-
         # print(ans1, label, day)
         # Prevent division by zero
         return ans1 / samples if samples != 0 else np.nan
