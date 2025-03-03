@@ -4,6 +4,7 @@ import fullmodel_v1_8
 import pandas as pd
 from Extract_dataV2 import extractData
 import matplotlib.pyplot as plt
+from matplotlib.ticker import MaxNLocator
 import numpy as np
 import os
 from datetime import datetime, timedelta
@@ -33,7 +34,7 @@ LakeYear = {'PIGEON LAKE': ['2021'],
             'MENDOTA LAKE': ['2018']}
 
 
-lake_name = "MENDOTA LAKE"
+lake_name = "PIGEON LAKE"
 
 
 years = LakeYear[lake_name]
@@ -231,14 +232,26 @@ M_values, B_values, A_values, \
 
 
 SaveFigures = True
+INDIVIDUAL = False
+TYPE =".pdf"
 yearname = ''
 for year in years:
     yearname = yearname + str(year) + '_'
     
 path = "./Figures/"+lake_name + '/'+yearname
 os.makedirs(path, exist_ok=True)
-RESOLUTION = 900
 
+tick_len = 4  # Length for ticks with labels
+other_tick_len = 2  # Length for other ticks
+FigsizeSome = (17.8 / 2.54, 10.5 / 2.54)
+Start_day = model_CyB.t_0  # Check dates
+End_day = model_CyB.t_f
+NoBins = 25
+SpaceDates = 2
+FONTSIZE = 9
+FONTSIZETITLE = 7
+RESOLUTION = 900
+box_position = (1.27, 0.98)
 
 def generate_dates(year):
     dates = []
@@ -255,29 +268,194 @@ def generate_dates(year):
     return dates
 
 
-day_start = pd.to_datetime("2023-05-01").day_of_year
-day_end = pd.to_datetime("2023-09-30").day_of_year
-# Plot fitting data
-for label in labels:
-    sns.set_style('ticks')
-    sns.plotting_context("paper", font_scale=1.5)  # Adjust font size as needed
-    fig, axs = plt.subplots(1, 1, figsize=(11 / 2.54, 11 / 2.54))
-    # axs = axs.ravel()
-    tB = np.array(
-        [day - day_start for day in data_fit[label] if day >= day_start and day <= day_end])
-    yB = [data_fit[label][day][0]
-          for day in data_fit[label] if day >= day_start and day <= day_end]
+day_start = pd.to_datetime(f"{year}-05-01").day_of_year
+day_end = pd.to_datetime(f"{year}-09-30").day_of_year
 
-    if len(yB) == 0:
-        labelData = None
-    else:
-        labelData = "Field measurements"
-    axs.scatter(tB, yB, color=(
-        250/255, 134/255, 0/255), label=labelData)
 
+if INDIVIDUAL:
+    day_start = pd.to_datetime(f"{year}-05-01").day_of_year
+    day_end = pd.to_datetime(f"{year}-09-30").day_of_year
+    # Plot fitting data
+    for label in labels:
+        y_formatter = ScalarFormatter(useMathText=True, useOffset=False)
+        y_formatter.set_powerlimits((-3, 4))  # Adjust the power limits as needed
+        y_formatter.orderOfMagnitude = 4  # Set the exponent to 4
+
+        # sns.set_style(y_formatter)
+        # sns.plotting_context("paper", font_scale=1.5)  # Adjust font size as needed
+        fig, axs = plt.subplots(1, 1, figsize=FigsizeSome)
+        # axs = axs.ravel()
+        tB = np.array(
+            [day - day_start for day in data_fit[label] if day >= day_start and day <= day_end])
+        yB = [data_fit[label][day][0]
+            for day in data_fit[label] if day >= day_start and day <= day_end]
+
+
+        axs.yaxis.set_major_formatter(y_formatter)
+        axs.tick_params(axis='y', labelsize=FONTSIZE,
+                                pad=0.5)
+        axs.tick_params(axis='x', labelsize=FONTSIZE,
+                                pad=0.5)
+        for spine in axs.spines.values():
+                spine.set_color('black')  # Set all spines color to black
+        axs.tick_params(axis='both', which='both', bottom=True, top=False,
+                                left=True, right=False, direction='out',
+                                length=tick_len, width=0.7, colors='black')
+
+        
+        
+        
+        if len(yB) == 0:
+            labelData = None
+        else:
+            labelData = "In-situ measurements"
+        axs.scatter(tB, yB, color=(
+            250/255, 134/255, 0/255), label=labelData)
+
+        if label in ['MICROCYSTIN, TOTAL', 'Microcystin (nM)']:
+            name = 'MICROCYSTIN'
+            ylabel = "Microcystin-LR ($\mu g/L$)"
+            y_values = M_values
+        elif label == 'PHOSPHORUS TOTAL DISSOLVED':
+            name = 'PHOSPHORUS'
+            ylabel = "Dissolved phosphorus ($mg P/L$)"
+            y_values = P_values
+        elif label == 'OXYGEN DISSOLVED (FIELD METER)':
+            name = 'OXYGEN'
+            ylabel = "Dissolved $O_2$ ($mg O_2/L$)"
+            y_values = O_values
+        elif label == 'Total cyanobacterial cell count (cells/mL)':
+            name = 'CB'
+            ylabel = "Cyanobacterial biomass ($mg C/L$)"
+            y_values = B_values
+        elif label == 'TEMPERATURE WATER':
+            name = 'TEMPERATURE WATER'
+            ylabel = "Water temperature ($C^{\circ}$)"
+            y_values = model_CyB.Temp(model_CyB.t)
+
+        axs.plot(model_CyB.t, y_values, color=(19/255, 103/255, 131/255))
+
+        # plt.xlabel("Time (days)")
+        plt.xlabel("Time (MM-DD)")
+        plt.ylabel(ylabel)
+        plt.title('')
+        fig.legend(loc='outside upper center',
+                    bbox_to_anchor=box_position,
+                    fancybox=True, shadow=False, ncol=1,
+                    title=None)
+        y_formatter = ScalarFormatter(useMathText=True, useOffset=False)
+        y_formatter.set_powerlimits((-3, 4))
+        y_formatter.orderOfMagnitude = 4
+        axs.yaxis.set_major_formatter(y_formatter)
+
+        for spine in axs.spines.values():
+            spine.set_color('black')  # Set all spines color to black
+        axs.tick_params(axis='both', which='both', bottom=True, top=False,
+                                left=True, right=False, direction='out',
+                                length=tick_len, width=0.7, colors='black')
+
+        # axs.set_ylim(y_values.min()-0.001, y_values.max()*(1+0.05))
+        # axs.set_xlim(model_CyB.t.min(), model_CyB.t.max())
+
+        # Dates as x axis
+        dates = generate_dates(int(year))
+        DATES = [date[5:] for date in dates][Start_day:End_day+1]
+        DATES.sort()
+        # x_ticks = axs.xaxis.get_ticklocs()
+        # axs.set_xlim(left=0)
+        axs.xaxis.set_major_locator(
+                    MaxNLocator(integer=True, nbins=NoBins))
+
+        x_ticks = axs.xaxis.get_ticklocs()
+
+                
+
+        if len(dates) >= len(x_ticks):
+            max_tick = x_ticks.max()
+            x_labels = [''] * (len(x_ticks))
+            # x_ticks = [tick for tick in x_ticks if tick >= 0]
+            x_labels[::SpaceDates] = x_labels[::SpaceDates] = [
+                                            dates[int(x_val)][5:] if x_val >= 0 else ''
+                                            for x_val in x_ticks[::SpaceDates]
+                                        ]
+            axs.set_xticks(x_ticks)
+            axs.xaxis.set_ticklabels(x_labels,
+                                    rotation=90,
+                                    fontsize=FONTSIZE)
+
+                    # Adjust the length of ticks with labels
+            for tick in axs.xaxis.get_major_ticks():
+                if tick.label1.get_text():  # Check if tick has a label
+                    tick.tick1line.set_markersize(tick_len)
+                            
+                else:
+                    tick.tick1line.set_markersize(other_tick_len)
+                        
+
+        else:
+                x_labels = dates
+                axs.xaxis.set_ticklabels(x_labels,
+                                                rotation=90,
+                                                fontsize=FONTSIZE)
+                axs.set_xlabel('Time (YY-MM-DD)', fontsize=FONTSIZETITLE,
+                                labelpad=2)
+                axs.grid(False)
+
+        # plt.legend()
+        plt.tight_layout()
+        if SaveFigures:
+            plt.savefig(path + name + TYPE, dpi=RESOLUTION, bbox_inches='tight')
+
+
+# Create a 2x2 figure
+labels = [
+    'MICROCYSTIN, TOTAL',
+    'PHOSPHORUS TOTAL DISSOLVED',
+    'OXYGEN DISSOLVED (FIELD METER)',
+    'Total cyanobacterial cell count (cells/mL)'
+]
+fig, axs = plt.subplots(2, 2, figsize=FigsizeSome) 
+axs = axs.flatten()  # Flatten so we can index each subplot in a simple loop
+
+for i, label in enumerate(labels):
+    # Get the appropriate axes
+    ax = axs[i]
+
+    # Create a ScalarFormatter for the y-axis
+    y_formatter = ScalarFormatter(useMathText=True, useOffset=False)
+    y_formatter.set_powerlimits((-3, 4))  # Adjust as needed
+    y_formatter.orderOfMagnitude = 4
+
+    # Subset the data for the time window
+    tB = np.array([
+        day - day_start 
+        for day in data_fit[label] 
+        if (day >= day_start and day <= day_end)
+    ])
+    yB = [
+        data_fit[label][day][0] 
+        for day in data_fit[label] 
+        if (day >= day_start and day <= day_end)
+    ]
+
+    # Format the axes
+    ax.yaxis.set_major_formatter(y_formatter)
+    ax.tick_params(axis='y', labelsize=FONTSIZE, pad=0.5)
+    ax.tick_params(axis='x', labelsize=FONTSIZE, pad=0.5)
+    for spine in ax.spines.values():
+        spine.set_color('black')
+    ax.tick_params(axis='both', which='both', bottom=True, top=False,
+                   left=True, right=False, direction='out',
+                   length=tick_len, width=0.7, colors='black')
+
+    # Plot the scatter (in-situ data)
+    labelData = "In-situ measurements" if len(yB) > 0 else None
+    ax.scatter(tB, yB, color=(250/255, 134/255, 0/255), label=labelData)
+
+    # Decide which model values and label to use
     if label in ['MICROCYSTIN, TOTAL', 'Microcystin (nM)']:
         name = 'MICROCYSTIN'
-        ylabel = "Microcystin-LR ($\mu g/L$)"
+        ylabel = "Microcystin-LR ($\\mu g/L$)"
         y_values = M_values
     elif label == 'PHOSPHORUS TOTAL DISSOLVED':
         name = 'PHOSPHORUS'
@@ -291,50 +469,71 @@ for label in labels:
         name = 'CB'
         ylabel = "Cyanobacterial biomass ($mg C/L$)"
         y_values = B_values
-    elif label == 'TEMPERATURE WATER':
-        name = 'TEMPERATURE WATER'
-        ylabel = "Water temperature ($C^{\circ}$)"
-        y_values = model_CyB.Temp(model_CyB.t)
+    else:
+        # Fallback for any other label
+        name = label
+        ylabel = label
+        y_values = np.zeros_like(model_CyB.t)
 
-    axs.plot(model_CyB.t, y_values, color=(19/255, 103/255, 131/255))
+    # Plot the model values
+    ax.plot(model_CyB.t, y_values, color=(19/255, 103/255, 131/255))
 
-    # plt.xlabel("Time (days)")
-    plt.xlabel("")
-    plt.ylabel(ylabel)
-    plt.title('')
-    plt.legend()
+    ax.set_xlabel("Time (MM-DD)")
+    ax.set_ylabel(ylabel, fontsize=FONTSIZETITLE-1)
+    ax.set_title('')  # Remove title or specify if you want something
+
+    # Optional: you can have each subplot display a local legend
+    # or remove the "label=..." above and use a single legend at the figure level.
+    # ax.legend(loc='upper left', fontsize=FONTSIZE)
+
+    # Re-apply the y-formatter after plotting
     y_formatter = ScalarFormatter(useMathText=True, useOffset=False)
     y_formatter.set_powerlimits((-3, 4))
     y_formatter.orderOfMagnitude = 4
-    axs.yaxis.set_major_formatter(y_formatter)
+    ax.yaxis.set_major_formatter(y_formatter)
 
-    for spine in axs.spines.values():
-        spine.set_color('black')
-    axs.tick_params(axis='both', which='both', bottom=True, top=True,
-                    left=True, right=True, direction='in', length=4, width=1, colors='black')
+    # (Optional) set limits:
+    # ax.set_ylim(y_values.min()-0.001, y_values.max()*(1+0.05))
+    # ax.set_xlim(model_CyB.t.min(), model_CyB.t.max())
 
-    # axs.set_ylim(y_values.min()-0.001, y_values.max()*(1+0.05))
-    # axs.set_xlim(model_CyB.t.min(), model_CyB.t.max())
-
-    # Dates as x axis
+    # Format the x-axis ticks as dates
     dates = generate_dates(int(year))
-    x_ticks = axs.xaxis.get_ticklocs()
+    DATES = [d[5:] for d in dates][Start_day:End_day+1]
+    DATES.sort()
 
-    if len(dates) > len(x_ticks):
-        x_stape = round(len(dates) / len(x_ticks), 0)
-        x_labels = [dates[int(x_val)] for x_val in x_ticks[:-1]]
-        axs.xaxis.set_ticklabels(x_labels,
-                                 rotation=30)
+    ax.xaxis.set_major_locator(MaxNLocator(integer=True, nbins=NoBins))
+    x_ticks = ax.xaxis.get_ticklocs()
+
+    if len(dates) >= len(x_ticks):
+        x_labels = [''] * len(x_ticks)
+        x_labels[::SpaceDates] = [
+            dates[int(x_val)][5:] if x_val >= 0 else ''
+            for x_val in x_ticks[::SpaceDates]
+        ]
+        ax.set_xticks(x_ticks)
+        ax.set_xticklabels(x_labels, rotation=90, fontsize=FONTSIZE)
+        for tick in ax.xaxis.get_major_ticks():
+            # Resize major ticks if there is a label
+            if tick.label1.get_text():
+                tick.tick1line.set_markersize(tick_len)
+            else:
+                tick.tick1line.set_markersize(other_tick_len)
     else:
         x_labels = dates
-        axs.xaxis.set_ticklabels(x_labels,
-                                 rotation=30)
+        ax.set_xticklabels(x_labels, rotation=90, fontsize=FONTSIZE)
+        ax.set_xlabel('Time (YY-MM-DD)', fontsize=FONTSIZETITLE, labelpad=2)
+        ax.grid(False)
 
-    # plt.legend()
-    plt.tight_layout()
-    if SaveFigures:
-        plt.savefig(path + name + ".pdf", dpi=RESOLUTION, bbox_inches='tight')
+# If you want a single legend for the entire figure, you can do something like:
+# handles, labels_ = axs[0].get_legend_handles_labels()  # or gather from all axes
+# fig.legend(handles, labels_, loc='upper center', ncol=4, bbox_to_anchor=(0.5, 1.02))
 
+plt.tight_layout()
+
+if SaveFigures:
+    plt.savefig(path + "All_Subplots" + TYPE, dpi=RESOLUTION, bbox_inches='tight')
+
+plt.show()
 
 if not 'PHOSPHORUS TOTAL DISSOLVED' in labels:
     sns.set_style('ticks')
@@ -428,11 +627,6 @@ if not 'MICROCYSTIN, TOTAL' in labels and not 'Microcystin (nM)' in labels:
     axs.tick_params(axis='both', which='both', bottom=True, top=True,
                     left=True, right=True, direction='in', length=4, width=1, colors='black')
 
-    # axs.set_ylim(y_values.min()-0.001, y_values.max()*(1+0.05))
-    # axs.set_xlim(model_CyB.t.min(), model_CyB.t.max())
-
-    # Dates as x axis
-    # dates = generate_dates(2023)
     x_ticks = axs.xaxis.get_ticklocs()
 
     if len(dates) > len(x_ticks):
@@ -448,7 +642,7 @@ if not 'MICROCYSTIN, TOTAL' in labels and not 'Microcystin (nM)' in labels:
     # plt.legend()
     plt.tight_layout()
     if SaveFigures:
-        plt.savefig(path + 'MICROCYSTIN' + ".pdf",
+        plt.savefig(path + 'MICROCYSTIN' + TYPE,
                     dpi=RESOLUTION, bbox_inches='tight')
 
 
@@ -498,7 +692,7 @@ if not 'TEMPERATURE WATER' in labels:
     # plt.legend()
     plt.tight_layout()
     if SaveFigures:
-        plt.savefig(path + 'TEMPERATURE WATER' + ".pdf",
+        plt.savefig(path + 'TEMPERATURE WATER' + TYPE,
                     dpi=RESOLUTION, bbox_inches='tight')
 
 
